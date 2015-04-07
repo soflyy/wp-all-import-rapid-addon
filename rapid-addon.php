@@ -246,7 +246,7 @@ if (!class_exists('RapidAddon')) {
 						)
 					);
 
-				} else if ($field_params['type'] == 'radio') {
+				} else if ($field_params['type'] == 'radio') {					
 
 					PMXI_API::add_field(
 						'enum',
@@ -255,7 +255,6 @@ if (!class_exists('RapidAddon')) {
 							'tooltip' => '',
 							'field_name' => $this->slug."[".$field_slug."]",
 							'field_value' => $current_values[$this->slug][$field_slug],
-
 							'enum_values' => $field_params['enum_values'],
 							'mapping' => true,
 							'field_key' => $field_slug,
@@ -282,6 +281,21 @@ if (!class_exists('RapidAddon')) {
 		/* Get values of the add-ons fields for use in the metabox */
 		
 		function helper_current_field_values($default = array()) {
+
+			if (empty($default)){
+
+				$options = array(
+					'mapping' => array(),
+					'xpaths' => array()
+				);
+
+				foreach ($this->fields as $field_slug => $field_params) {
+					$options[$field_slug] = '';
+				}
+
+				$default = array($this->slug => $options);
+
+			}			
 
 			$input = new PMXI_Input();
 
@@ -326,7 +340,7 @@ if (!class_exists('RapidAddon')) {
 		function helper_metabox_top($name) {
 
 			return '
-			<div class="wpallimport-collapsed wpallimport-section '.$this->slug.' closed">
+			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.$this->slug.' closed">
 				<div class="wpallimport-content-section">
 					<div class="wpallimport-collapsed-header">
 						<h3>'.__($name,'pmxi_plugin').'</h3>	
