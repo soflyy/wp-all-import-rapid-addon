@@ -70,9 +70,9 @@ if (!class_exists('RapidAddon')) {
 		}
 
 
-		function add_field($field_slug, $field_name, $field_type, $enum_values = null) {
+		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
 
-			$this->fields[$field_slug] = array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values);
+			$this->fields[$field_slug] = array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip);
 
 		}
 
@@ -211,7 +211,7 @@ if (!class_exists('RapidAddon')) {
 						'simple',
 						$field_params['name'],
 						array(
-							'tooltip' => '',
+							'tooltip' => $field_params['tooltip'],
 							'field_name' => $this->slug."[".$field_slug."]",
 							'field_value' => $current_values[$this->slug][$field_slug]
 						)
@@ -223,7 +223,7 @@ if (!class_exists('RapidAddon')) {
 						'textarea',
 						$field_params['name'],
 						array(
-							'tooltip' => '',
+							'tooltip' => $field_params['tooltip'],
 							'field_name' => $this->slug."[".$field_slug."]",
 							'field_value' => $current_values[$this->slug][$field_slug]
 						)
@@ -235,7 +235,7 @@ if (!class_exists('RapidAddon')) {
 						'image',
 						$field_params['name'],
 						array(
-							'tooltip' => '',
+							'tooltip' => $field_params['tooltip'],
 							'field_name' => $this->slug."[".$field_slug."]",
 							'field_value' => $current_values[$this->slug][$field_slug],
 
@@ -252,7 +252,7 @@ if (!class_exists('RapidAddon')) {
 						'enum',
 						$field_params['name'],
 						array(
-							'tooltip' => '',
+							'tooltip' => $field_params['tooltip'],
 							'field_name' => $this->slug."[".$field_slug."]",
 							'field_value' => $current_values[$this->slug][$field_slug],
 							'enum_values' => $field_params['enum_values'],
