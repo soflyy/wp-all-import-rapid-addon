@@ -293,7 +293,7 @@ if (!class_exists('RapidAddon')) {
 					$options[$field_slug] = '';
 				}
 
-				$default = array($this->slug => $options);
+				$default = array($this->slug => $options);				
 
 			}			
 
@@ -340,6 +340,30 @@ if (!class_exists('RapidAddon')) {
 		function helper_metabox_top($name) {
 
 			return '
+			<style type="text/css">
+				.wpallimport-plugin .wpallimport-addon div.input {
+					margin-bottom: 15px;
+				}
+				.wpallimport-plugin .wpallimport-addon .custom-params tr td.action{
+					width: auto !important;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-custom-fields-actions{
+					right:0 !important;
+				}
+				.wpallimport-plugin .wpallimport-addon table tr td.wpallimport-enum-input-wrapper{
+					width: 80%;
+				}
+				.wpallimport-plugin .wpallimport-addon table tr td.wpallimport-enum-input-wrapper input{
+					width: 100%;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-custom-fields-actions{
+					float: right;	
+					right: 30px;
+					position: relative;				
+					border: 1px solid #ddd;
+					margin-bottom: 10px;
+				}
+			</style>
 			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.$this->slug.' closed">
 				<div class="wpallimport-content-section">
 					<div class="wpallimport-collapsed-header">
