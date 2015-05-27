@@ -8,6 +8,7 @@ if (!class_exists('RapidAddon')) {
 		public $slug;
 		public $fields;
 		public $import_function;
+		public $notice_text;
 
 		function __construct($name, $slug) {
 
@@ -25,16 +26,22 @@ if (!class_exists('RapidAddon')) {
 			$addon_active = false;
 
 			if ($post_type != null) {
-				if (@in_array($post_type, $this->active_post_types)) {
+				if (@in_array($post_type, $this->active_post_types) or empty($this->active_post_types)) {
 					$addon_active = true;
 				}
-			}
+			}			
 
-			$current_theme = wp_get_theme();
-			$theme_name = $current_theme->get('Name');
+			if ($addon_active){
+				
+				$current_theme = wp_get_theme();
+				$theme_name = $current_theme->get('Name');
 
-			if (@in_array($theme_name, $this->active_themes)) {
-				$addon_active = true;
+				if (@in_array($theme_name, $this->active_themes)) {
+					$addon_active = true;
+				}
+				else{
+					$addon_active = false;
+				}
 			}
 
 			if ($this->when_to_run == "always") {
@@ -44,14 +51,14 @@ if (!class_exists('RapidAddon')) {
 			return $addon_active;
 		}
 		
-		function run($when_to_run = "always") {
+		function run($conditions = array()) {
 
-			if ($when_to_run == "always") {
+			if (empty($conditions)) {
 				$this->when_to_run = "always";
 			}
 
-			@$this->active_post_types = $when_to_run['post_types'];
-			@$this->active_themes = $when_to_run['themes'];
+			@$this->active_post_types = ( ! empty($conditions['post_types'])) ? $conditions['post_types'] : array();
+			@$this->active_themes = ( ! empty($conditions['themes'])) ? $conditions['themes'] : array();
 
 			add_filter('pmxi_addons', array($this, 'wpai_api_register'));
 			add_filter('wp_all_import_addon_parse', array($this, 'wpai_api_parse'));
@@ -129,7 +136,7 @@ if (!class_exists('RapidAddon')) {
 
 		function import($importData, $parsedData) {
 
-			if (!$this->is_active_addon($importData['import']->options['custom_type'])) {
+			if (!$this->is_active_addon($importData['post_type'])) {
 				return;
 			}
 
@@ -502,16 +509,53 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-		function admin_notice($notice_text = '') {
+		/*
+		*
+		* $conditions - array('themes' => array('Realia'), 'plugins' => array('plugin-directory/plugin-file.php', 'plugin-directory2/plugin-file.php')) 
+		*
+		*/
+		function admin_notice($notice_text = '', $conditions = array()) {
 
-			if ($notice_text != '') {
-				$this->notice_text = $notice_text;
+			$is_show_notice = true;
+
+			// Supported Themes
+			if ( ! empty($conditions['themes']) ){
+
+				$themeInfo    = wp_get_theme();
+				$currentTheme = $themeInfo->get('Name');
+
+				if ( in_array($currentTheme, $conditions['themes']) ){ 					
+					$is_show_notice = false;
+				}
+
 			}
 
-			add_action('admin_notices', array($this, 'display_admin_notice'));
+			// Required Plugins
+			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){
+
+				include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+				$requires_counter = 0;
+				foreach ($conditions['plugins'] as $plugin) {
+					if ( is_plugin_active($plugin) ) $requires_counter++;
+				}
+
+				if ($requires_counter != count($conditions['plugins'])){ 					
+					$is_show_notice = true;			
+				}
+
+			}
+
+			if ( $is_show_notice ){
+
+				if ( $notice_text != '' ) {
+					$this->notice_text = $notice_text;
+				}
+
+				add_action('admin_notices', array($this, 'display_admin_notice'));
+			}
 
 		}
-
 
 	}
 
