@@ -544,6 +544,9 @@ if (!class_exists('RapidAddon')) {
 					$is_show_notice = true;			
 				}
 
+				if ( ! $is_show_notice and ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+					$is_show_notice = true;
+				}
 			}
 
 			if ( $is_show_notice ){
