@@ -7,6 +7,7 @@ if (!class_exists('RapidAddon')) {
 		public $name;
 		public $slug;
 		public $fields;
+		public $accordions = array();
 		public $import_function;
 		public $notice_text;
 
@@ -79,7 +80,21 @@ if (!class_exists('RapidAddon')) {
 
 		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
 
-			$this->fields[$field_slug] = array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip);
+			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false);
+
+			$this->fields[$field_slug] = $field;
+
+			return $field;
+
+		}
+
+		function add_sub_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
+
+			$field = array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => true, "slug" => $field_slug);
+
+			$this->fields[$field_slug] = $field;
+
+			return $field;
 
 		}
 
@@ -210,72 +225,28 @@ if (!class_exists('RapidAddon')) {
 
 			$current_values = $this->helper_current_field_values();
 
+			$counter = 1;
+
 			foreach ($this->fields as $field_slug => $field_params) {
 
-				if ($field_params['type'] == 'text') {
+				// do not render sub fields
+				if ($field_params['is_sub_field']) continue;				
 
-					PMXI_API::add_field(
-						'simple',
-						$field_params['name'],
-						array(
-							'tooltip' => $field_params['tooltip'],
-							'field_name' => $this->slug."[".$field_slug."]",
-							'field_value' => $current_values[$this->slug][$field_slug]
-						)
-					);
+				$this->render_field($field_params, $field_slug, $current_values);
 
-				} else if ($field_params['type'] == 'textarea') {
-
-					PMXI_API::add_field(
-						'textarea',
-						$field_params['name'],
-						array(
-							'tooltip' => $field_params['tooltip'],
-							'field_name' => $this->slug."[".$field_slug."]",
-							'field_value' => $current_values[$this->slug][$field_slug]
-						)
-					);
-
-				} else if ($field_params['type'] == 'image') {
-
-					PMXI_API::add_field(
-						'image',
-						$field_params['name'],
-						array(
-							'tooltip' => $field_params['tooltip'],
-							'field_name' => $this->slug."[".$field_slug."]",
-							'field_value' => $current_values[$this->slug][$field_slug],
-
-							'download_image' => $current_values[$this->slug]['download_image'][$field_slug],
-							'field_key' => $field_slug,
-							'addon_prefix' => $this->slug
-
-						)
-					);
-
-				} else if ($field_params['type'] == 'radio') {					
-
-					PMXI_API::add_field(
-						'enum',
-						$field_params['name'],
-						array(
-							'tooltip' => $field_params['tooltip'],
-							'field_name' => $this->slug."[".$field_slug."]",
-							'field_value' => $current_values[$this->slug][$field_slug],
-							'enum_values' => $field_params['enum_values'],
-							'mapping' => true,
-							'field_key' => $field_slug,
-							'mapping_rules' => $current_values[$this->slug]['mapping'][$field_slug],
-							'xpath' => $current_values[$this->slug]['xpaths'][$field_slug],
-							'addon_prefix' => $this->slug
-						)
-					);
-
-
+				foreach ($this->accordions as $accordion) {
+					if ($accordion['order'] == $counter){
+						echo $this->helper_metabox_accordion_top($accordion['title']);
+						foreach ($accordion['fields'] as $sub_field_params) {
+							$this->render_field($sub_field_params, $sub_field_params['slug'], $current_values);
+						}
+						echo $this->helper_metabox_accordion_bottom();
+					}
 				}
 
-
 				echo "<br />";
+
+				$counter++;
 
 			}
 
@@ -283,7 +254,71 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function render_field($field_params, $field_slug, $current_values){
 
+			if ($field_params['type'] == 'text') {
+
+				PMXI_API::add_field(
+					'simple',
+					$field_params['name'],
+					array(
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_value' => $current_values[$this->slug][$field_slug]
+					)
+				);
+
+			} else if ($field_params['type'] == 'textarea') {
+
+				PMXI_API::add_field(
+					'textarea',
+					$field_params['name'],
+					array(
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_value' => $current_values[$this->slug][$field_slug]
+					)
+				);
+
+			} else if ($field_params['type'] == 'image') {
+
+				PMXI_API::add_field(
+					'image',
+					$field_params['name'],
+					array(
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_value' => $current_values[$this->slug][$field_slug],
+
+						'download_image' => $current_values[$this->slug]['download_image'][$field_slug],
+						'field_key' => $field_slug,
+						'addon_prefix' => $this->slug
+
+					)
+				);
+
+			} else if ($field_params['type'] == 'radio') {					
+
+				PMXI_API::add_field(
+					'enum',
+					$field_params['name'],
+					array(
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_value' => $current_values[$this->slug][$field_slug],
+						'enum_values' => $field_params['enum_values'],
+						'mapping' => true,
+						'field_key' => $field_slug,
+						'mapping_rules' => $current_values[$this->slug]['mapping'][$field_slug],
+						'xpath' => $current_values[$this->slug]['xpaths'][$field_slug],
+						'addon_prefix' => $this->slug
+					)
+				);
+
+
+			}
+
+		}
 
 		/* Get values of the add-ons fields for use in the metabox */
 		
@@ -342,7 +377,39 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function add_accordion( $title = '', $fields = array() ){
+			if ( ! empty($fields) ){
 
+				$this->accordions[] = array(
+					'title' => $title,
+					'fields' => $fields,
+					'order' => count($this->fields) - count($fields)
+				);		
+				
+			}
+		}
+
+		function helper_metabox_accordion_top($name) {
+			return '
+			<div class="wpallimport-collapsed closed wpallimport-section" style="margin-left: -25px; margin-right: -25px;">
+				<div class="wpallimport-content-section rad0" style="margin:0; border-top:1px solid #ddd; border-bottom: none; border-right: none; border-left: none; background: #f1f2f2;">
+					<div class="wpallimport-collapsed-header">
+						<h3 style="color:#40acad;">'. $name .'</h3>	
+					</div>
+					<div class="wpallimport-collapsed-content" style="padding: 0;">										
+						<div class="wpallimport-collapsed-content-inner">	
+			';
+		}
+
+		function helper_metabox_accordion_bottom() {
+
+			return '				
+						</div>
+					</div>
+				</div>
+			</div>';
+
+		}
 
 		function helper_metabox_top($name) {
 
