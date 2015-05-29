@@ -225,9 +225,11 @@ if (!class_exists('RapidAddon')) {
 
 			$current_values = $this->helper_current_field_values();
 
-			$counter = 1;
+			$counter = 0;
 
 			foreach ($this->fields as $field_slug => $field_params) {
+
+				$counter++;
 
 				// do not render sub fields
 				if ($field_params['is_sub_field']) continue;				
@@ -244,9 +246,7 @@ if (!class_exists('RapidAddon')) {
 					}
 				}
 
-				echo "<br />";
-
-				$counter++;
+				echo "<br />";				
 
 			}
 
@@ -377,7 +377,7 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-		function add_accordion( $title = '', $fields = array() ){
+		function add_accordion( $main_field = false, $title = '', $fields = array() ){
 			if ( ! empty($fields) ){
 
 				$this->accordions[] = array(
@@ -391,8 +391,8 @@ if (!class_exists('RapidAddon')) {
 
 		function helper_metabox_accordion_top($name) {
 			return '
-			<div class="wpallimport-collapsed closed wpallimport-section" style="margin-left: -25px; margin-right: -25px;">
-				<div class="wpallimport-content-section rad0" style="margin:0; border-top:1px solid #ddd; border-bottom: none; border-right: none; border-left: none; background: #f1f2f2;">
+			<div class="wpallimport-collapsed closed wpallimport-section" style="margin-top: -16px;">
+				<div class="wpallimport-content-section rad4" style="margin:0; border-top:1px solid #ddd; border-bottom: none; border-right: none; border-left: none; background: #f1f2f2;">
 					<div class="wpallimport-collapsed-header">
 						<h3 style="color:#40acad;">'. $name .'</h3>	
 					</div>
