@@ -238,7 +238,7 @@ if (!class_exists('RapidAddon')) {
 
 				foreach ($this->accordions as $accordion) {
 					if ($accordion['order'] == $counter){
-						echo $this->helper_metabox_accordion_top($accordion['title']);
+						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width']);
 						foreach ($accordion['fields'] as $sub_field_params) {
 							$this->render_field($sub_field_params, $sub_field_params['slug'], $current_values);
 						}
@@ -383,15 +383,19 @@ if (!class_exists('RapidAddon')) {
 				$this->accordions[] = array(
 					'title' => $title,
 					'fields' => $fields,
-					'order' => count($this->fields) - count($fields)
+					'order' => count($this->fields) - count($fields),
+					'is_full_width' => empty($main_field) ? true : false
 				);		
 				
 			}
 		}
 
-		function helper_metabox_accordion_top($name) {
+		function helper_metabox_accordion_top($name, $is_full_width) {
+
+			$styles = ($is_full_width) ? 'margin-left: -25px; margin-right: -25px;' : 'margin-top: -16px;';
+
 			return '
-			<div class="wpallimport-collapsed closed wpallimport-section" style="margin-top: -16px;">
+			<div class="wpallimport-collapsed closed wpallimport-section" style="'. $styles .'">
 				<div class="wpallimport-content-section rad4" style="margin:0; border-top:1px solid #ddd; border-bottom: none; border-right: none; border-left: none; background: #f1f2f2;">
 					<div class="wpallimport-collapsed-header">
 						<h3 style="color:#40acad;">'. $name .'</h3>	
