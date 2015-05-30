@@ -591,24 +591,26 @@ if (!class_exists('RapidAddon')) {
 		*/
 		function admin_notice($notice_text = '', $conditions = array()) {
 
-			$is_show_notice = true;
+			$is_show_notice = false;
+
+			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+			if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+				$is_show_notice = true;
+			}
 
 			// Supported Themes
 			if ( ! empty($conditions['themes']) ){
 
 				$themeInfo    = wp_get_theme();
 				$currentTheme = $themeInfo->get('Name');
-
-				if ( in_array($currentTheme, $conditions['themes']) ){ 					
-					$is_show_notice = false;
-				}
+				
+				$is_show_notice = in_array($currentTheme, $conditions['themes']) ? false : true;				
 
 			}
 
 			// Required Plugins
-			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){
-
-				include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){				
 
 				$requires_counter = 0;
 				foreach ($conditions['plugins'] as $plugin) {
@@ -619,9 +621,6 @@ if (!class_exists('RapidAddon')) {
 					$is_show_notice = true;			
 				}
 
-				if ( ! $is_show_notice and ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
-					$is_show_notice = true;
-				}
 			}
 
 			if ( $is_show_notice ){
