@@ -10,6 +10,7 @@ if (!class_exists('RapidAddon')) {
 		public $accordions = array();
 		public $import_function;
 		public $notice_text;
+		public $logger = null;
 
 		function __construct($name, $slug) {
 
@@ -163,6 +164,8 @@ if (!class_exists('RapidAddon')) {
 
 			if ( ! empty($parsedData) )	{
 
+				$this->logger = $importData['logger'];
+
 				$post_id = $importData['pid'];
 				$index = $importData['i'];
 
@@ -236,8 +239,8 @@ if (!class_exists('RapidAddon')) {
 
 				$this->render_field($field_params, $field_slug, $current_values);
 
-				foreach ($this->accordions as $accordion) {
-					if ($accordion['order'] == $counter){
+				foreach ($this->accordions as $accordion) {					
+					if ($accordion['order'] == $counter){						
 						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width']);
 						foreach ($accordion['fields'] as $sub_field_params) {
 							$this->render_field($sub_field_params, $sub_field_params['slug'], $current_values);
@@ -379,7 +382,6 @@ if (!class_exists('RapidAddon')) {
 
 		function add_accordion( $main_field = false, $title = '', $fields = array() ){
 			if ( ! empty($fields) ){
-
 				$this->accordions[] = array(
 					'title' => $title,
 					'fields' => $fields,
@@ -475,6 +477,8 @@ if (!class_exists('RapidAddon')) {
 			$data = array(); // parsed data
 
 			if ( ! empty($import->options[$this->slug])){
+
+				$this->logger = $parsingData['logger'];
 
 				$cxpath = $xpath_prefix . $import->xpath;
 
@@ -631,7 +635,12 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-	}
+		function log( $m = false){		
+
+			$m and $this->logger and call_user_func($this->logger, $m);
+
+		}
+	}	
 
 }
 
