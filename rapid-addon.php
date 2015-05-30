@@ -600,7 +600,7 @@ if (!class_exists('RapidAddon')) {
 			}
 
 			// Supported Themes
-			if ( ! empty($conditions['themes']) ){
+			if ( ! $is_show_notice and ! empty($conditions['themes']) ){
 
 				$themeInfo    = wp_get_theme();
 				$currentTheme = $themeInfo->get('Name');
