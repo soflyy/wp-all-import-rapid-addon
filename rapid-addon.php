@@ -7,10 +7,38 @@ if (!class_exists('RapidAddon')) {
 		public $name;
 		public $slug;
 		public $fields;
+		public $options = array();
 		public $accordions = array();
+		public $image_sections = array();
 		public $import_function;
 		public $notice_text;
 		public $logger = null;
+		public $image_options = array(
+			'download_images' => 'yes', 
+			'download_featured_delim' => ',', 
+			'download_featured_image' => '',
+			'featured_image' => '',
+			'featured_delim' => ',', 
+			'search_existing_images' => 1,
+			'is_featured' => 0,
+			'create_draft' => 0,
+			'set_image_meta_title' => 0,
+			'image_meta_title_delim' => ',',
+			'image_meta_title' => '',
+			'set_image_meta_caption' => 0,
+			'image_meta_caption_delim' => ',',
+			'image_meta_caption' => '',
+			'set_image_meta_alt' => 0,
+			'image_meta_alt_delim' => ',',
+			'image_meta_alt' => '',
+			'set_image_meta_description' => 0,
+			'image_meta_description_delim' => ',',
+			'image_meta_description' => '',
+			'auto_rename_images' => 0,
+			'auto_rename_images_suffix' => '',
+			'auto_set_extension' => 0,
+			'new_extension' => ''
+		);	
 
 		function __construct($name, $slug) {
 
@@ -66,6 +94,7 @@ if (!class_exists('RapidAddon')) {
 			add_filter('wp_all_import_addon_parse', array($this, 'wpai_api_parse'));
 			add_filter('wp_all_import_addon_import', array($this, 'wpai_api_import'));
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
+			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 1);
 			add_action('admin_init', array($this, 'admin_notice_ignore'));
 
@@ -99,12 +128,22 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function add_option($slug, $default_value = ''){
+			$this->options[$slug] = $default_value;
+		}
+
 		function options_array() {
 
 			$options_list = array();
 
 			foreach ($this->fields as $field_slug => $field_params) {
 				$options_list[$field_slug] = '';
+			}
+
+			if ( ! empty($this->options) ){
+				foreach ($this->options as $slug => $value) {
+					$options_arr[$slug] = $value;
+				}
 			}
 
 			$options_arr[$this->slug] = $options_list;
@@ -239,21 +278,34 @@ if (!class_exists('RapidAddon')) {
 
 				$this->render_field($field_params, $field_slug, $current_values);
 
+				$is_accordion = false;
 				foreach ($this->accordions as $accordion) {					
-					if ($accordion['order'] == $counter){						
-						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width']);
+					if ($accordion['order'] == $counter){
+						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width'], $accordion['order'] == count($this->fields) - count($accordion['fields']));
 						foreach ($accordion['fields'] as $sub_field_params) {
 							$this->render_field($sub_field_params, $sub_field_params['slug'], $current_values);
 						}
 						echo $this->helper_metabox_accordion_bottom();
+						$is_accordion = true;
 					}
 				}
 
-				echo "<br />";				
+				if ( ! $is_accordion ) echo "<br />";				
 
 			}
 
 			echo $this->helper_metabox_bottom();
+
+			if ( ! empty($this->image_sections) ){				
+
+				foreach ($this->image_sections as $section) {
+					$section_options = array();
+					foreach ($this->image_options as $slug => $value) {
+						$section_options[$section['slug'] . $slug] = $value;
+					}										
+					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $this->helper_current_field_values($section_options));
+				}
+			}
 
 		}
 
@@ -392,13 +444,61 @@ if (!class_exists('RapidAddon')) {
 			}
 		}
 
-		function helper_metabox_accordion_top($name, $is_full_width) {
+		function helper_metabox_accordion_top($name, $is_full_width, $in_the_bottom = false) {
 
 			$styles = ($is_full_width) ? 'margin-left: -25px; margin-right: -25px;' : 'margin-top: -16px;';
 
+			if ( ! $in_the_bottom and $is_full_width ) $styles .= 'margin-top: 25px; margin-bottom: 25px;';
+
 			return '
-			<div class="wpallimport-collapsed closed wpallimport-section" style="'. $styles .'">
-				<div class="wpallimport-content-section rad4" style="margin:0; border-top:1px solid #ddd; border-bottom: none; border-right: none; border-left: none; background: #f1f2f2;">
+			<style type="text/css">
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options {
+					margin-bottom: 15px;					
+				}		
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
+					bottom: -40px;
+					margin-bottom: 0;
+					margin-left: -25px;
+					margin-right: -25px;
+					position: relative;						
+				}		
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-content-section{
+					border-bottom: 1px solid #ddd;
+					border-radius: 0;
+					-moz-border-radius-bottomleft: 4px;
+					-webkit-border-bottom-left-radius: 4px;
+					border-bottom-left-radius: 4px;
+					-moz-border-radius-bottomright: 4px;
+					-webkit-border-bottom-right-radius: 4px;
+					border-bottom-right-radius: 4px;					
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-content-section{
+					padding-bottom: 8px;
+					margin:0; 
+					border-top:1px solid #ddd; 
+					border-bottom: none; 
+					border-right: none; 
+					border-left: none; 
+					background: #f1f2f2;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-content-section{					
+					margin:0; 
+					border-top:1px solid #ddd; 
+					border-bottom: none; 
+					border-right: none; 
+					border-left: none; 
+					background: #f1f2f2;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header{
+					padding-left: 7px;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header h3{
+					font-size: 14px;
+					margin: 6px 0;
+				}
+			</style>
+			<div class="wpallimport-collapsed closed wpallimport-section '. (($in_the_bottom and $is_full_width) ? 'wpallimport-sub-options-full-width' : 'wpallimport-sub-options') .' " style="'. $styles .'">
+				<div class="wpallimport-content-section rad0">
 					<div class="wpallimport-collapsed-header">
 						<h3 style="color:#40acad;">'. $name .'</h3>	
 					</div>
@@ -468,7 +568,75 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		/**
+		*
+		* simply add an additional section 
+		*
+		*/
+		function import_images( $slug, $title ){
+			
+			if ( empty($title) or empty($slug) ) return;
 
+			$section_slug = 'pmxi_' . $slug; 
+
+			$this->image_sections[] = array(
+				'title' => $title,
+				'slug'  => $section_slug
+			);			
+			
+			foreach ($this->image_options as $option_slug => $value) {
+				$this->add_option($section_slug . $option_slug, $value);
+			}
+
+			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);
+			
+			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 3);
+		}			
+
+			function is_allow_import_images($is_allow, $post_type){
+				return ($this->is_active_addon($post_type)) ? true : $is_allow;
+			}
+
+		/**
+		*
+		* filter to control additional images sections
+		*
+		*/
+		function additional_sections($sections){
+			if ( ! empty($this->image_sections) ){
+				foreach ($this->image_sections as $add_section) {
+					$sections[] = $add_section;
+				}
+			}
+			return $sections;
+		}
+
+		/**
+		*
+		* disable the default images section
+		*
+		*/
+		public $hide_images_section_for_post_type;
+		function disable_default_images($post_type = false){
+						
+			$this->hide_images_section_for_post_type = $post_type;
+			add_filter('wp_all_import_is_images_section_enabled', array($this, 'is_enable_default_images_section'), 10, 2);
+		}
+			function is_enable_default_images_section($is_enabled, $post_type){						
+				
+				if ( empty($this->hide_images_section_for_post_type) ) return false;
+
+				if ( ! is_array($this->hide_images_section_for_post_type) )
+				{
+					return ($this->hide_images_section_for_post_type == $post_type) ? false : true;
+				}
+				else
+				{
+					return (in_array($post_type, $this->hide_images_section_for_post_type)) ? false : true;
+				}
+
+				return false;
+			}
 
 		function helper_parse($parsingData, $options) {
 
