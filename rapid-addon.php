@@ -590,7 +590,7 @@ if (!class_exists('RapidAddon')) {
 
 			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);
 			
-			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 3);
+			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 4);
 		}			
 
 			function is_allow_import_images($is_allow, $post_type){
