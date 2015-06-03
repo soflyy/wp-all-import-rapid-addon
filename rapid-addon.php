@@ -615,27 +615,16 @@ if (!class_exists('RapidAddon')) {
 		*
 		* disable the default images section
 		*
-		*/
-		public $hide_images_section_for_post_type;
+		*/		
 		function disable_default_images($post_type = false){
-						
-			$this->hide_images_section_for_post_type = $post_type;
+									
 			add_filter('wp_all_import_is_images_section_enabled', array($this, 'is_enable_default_images_section'), 10, 2);
+
 		}
 			function is_enable_default_images_section($is_enabled, $post_type){						
 				
-				if ( empty($this->hide_images_section_for_post_type) ) return false;
-
-				if ( ! is_array($this->hide_images_section_for_post_type) )
-				{
-					return ($this->hide_images_section_for_post_type == $post_type) ? false : true;
-				}
-				else
-				{
-					return (in_array($post_type, $this->hide_images_section_for_post_type)) ? false : true;
-				}
-
-				return false;
+				return ($this->is_active_addon($post_type)) ? false : true;
+								
 			}
 
 		function helper_parse($parsingData, $options) {
