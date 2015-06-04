@@ -21,7 +21,7 @@ if (!class_exists('RapidAddon')) {
 			'featured_delim' => ',', 
 			'search_existing_images' => 1,
 			'is_featured' => 0,
-			'create_draft' => 0,
+			'create_draft' => 'no',
 			'set_image_meta_title' => 0,
 			'image_meta_title_delim' => ',',
 			'image_meta_title' => '',
@@ -81,6 +81,13 @@ if (!class_exists('RapidAddon')) {
 			return $addon_active;
 		}
 		
+		/**
+		* 
+		* Add-On Initialization
+		*
+		* @param array $conditions - list of supported themes and post types
+		*
+		*/
 		function run($conditions = array()) {
 
 			if (empty($conditions)) {
@@ -110,24 +117,34 @@ if (!class_exists('RapidAddon')) {
 
 		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
 
-			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false);
+			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "slug" => $field_slug);
 
 			$this->fields[$field_slug] = $field;
+
+			if ( ! empty($enum_values) ){
+				foreach ($enum_values as $key => $value) {
+					if (is_array($value)){
+						foreach ($value as $n => $param) {
+							if (is_array($param) and ! empty($this->fields[$param['slug']])){
+								$this->fields[$param['slug']]['is_sub_field'] = true;								
+							}
+						}
+					}
+				}
+			}
 
 			return $field;
 
 		}
 
-		function add_sub_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
-
-			$field = array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => true, "slug" => $field_slug);
-
-			$this->fields[$field_slug] = $field;
-
-			return $field;
-
-		}
-
+		/**
+		* 
+		* Add an option to WP All Import options list
+		*
+		* @param string $slug - option name
+		* @param string $default_value - default option value
+		*
+		*/
 		function add_option($slug, $default_value = ''){
 			$this->options[$slug] = $default_value;
 		}
@@ -276,14 +293,15 @@ if (!class_exists('RapidAddon')) {
 				// do not render sub fields
 				if ($field_params['is_sub_field']) continue;				
 
-				$this->render_field($field_params, $field_slug, $current_values);
+				$this->render_field($field_params, $field_slug, $current_values);						
 
 				$is_accordion = false;
 				foreach ($this->accordions as $accordion) {					
 					if ($accordion['order'] == $counter){
 						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width'], $accordion['order'] == count($this->fields) - count($accordion['fields']));
 						foreach ($accordion['fields'] as $sub_field_params) {
-							$this->render_field($sub_field_params, $sub_field_params['slug'], $current_values);
+							if ( ! empty($this->fields[$sub_field_params['slug']]) )
+								$this->render_field($this->fields[$sub_field_params['slug']], $sub_field_params['slug'], $current_values);							
 						}
 						echo $this->helper_metabox_accordion_bottom();
 						$is_accordion = true;
@@ -303,11 +321,11 @@ if (!class_exists('RapidAddon')) {
 					foreach ($this->image_options as $slug => $value) {
 						$section_options[$section['slug'] . $slug] = $value;
 					}										
-					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $this->helper_current_field_values($section_options));
+					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $this->helper_current_field_values($section_options), '', true, false, $section['type']);
 				}
 			}
 
-		}
+		}		
 
 		function render_field($field_params, $field_slug, $current_values){
 
@@ -344,7 +362,6 @@ if (!class_exists('RapidAddon')) {
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
 						'field_value' => $current_values[$this->slug][$field_slug],
-
 						'download_image' => $current_values[$this->slug]['download_image'][$field_slug],
 						'field_key' => $field_slug,
 						'addon_prefix' => $this->slug
@@ -366,7 +383,8 @@ if (!class_exists('RapidAddon')) {
 						'field_key' => $field_slug,
 						'mapping_rules' => $current_values[$this->slug]['mapping'][$field_slug],
 						'xpath' => $current_values[$this->slug]['xpaths'][$field_slug],
-						'addon_prefix' => $this->slug
+						'addon_prefix' => $this->slug,
+						'sub_fields' => $this->get_sub_fields($field_params, $field_slug, $current_values)
 					)
 				);
 
@@ -374,6 +392,85 @@ if (!class_exists('RapidAddon')) {
 			}
 
 		}
+			/**
+			*
+			* Helper function for nested radio fields
+			*
+			*/
+			function get_sub_fields($field_params, $field_slug, $current_values){
+				$sub_fields = array();	
+				if ( ! empty($field_params['enum_values']) ){										
+					foreach ($field_params['enum_values'] as $key => $value) {					
+						$sub_fields[$key] = array();	
+						if (is_array($value)){
+							foreach ($value as $k => $sub_field) {
+								if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']])){
+									switch ($this->fields[$sub_field['slug']]['type']) {
+										case 'text':
+											$sub_fields[$key][] = array(
+												'type'   => 'simple',
+												'label'  => $this->fields[$sub_field['slug']]['name'],
+												'params' => array(
+													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+													'field_name' => $this->slug."[".$sub_field['slug']."]",
+													'field_value' => $current_values[$this->slug][$sub_field['slug']]
+												)
+											);
+											break;
+										case 'textarea':
+											$sub_fields[$key][] = array(
+												'type'   => 'textarea',
+												'label'  => $this->fields[$sub_field['slug']]['name'],
+												'params' => array(
+													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+													'field_name' => $this->slug."[".$sub_field['slug']."]",
+													'field_value' => $current_values[$this->slug][$sub_field['slug']]
+												)
+											);
+											break;
+										case 'image':
+											$sub_fields[$key][] = array(
+												'type'   => 'image',
+												'label'  => $this->fields[$sub_field['slug']]['name'],
+												'params' => array(
+													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+													'field_name' => $this->slug."[".$sub_field['slug']."]",
+													'field_value' => $current_values[$this->slug][$sub_field['slug']],
+													'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+													'field_key' => $sub_field['slug'],
+													'addon_prefix' => $this->slug
+												)
+											);
+											break;
+										case 'radio':
+											$sub_fields[$key][] = array(
+												'type'   => 'enum',
+												'label'  => $this->fields[$sub_field['slug']]['name'],
+												'params' => array(
+													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+													'field_name' => $this->slug."[".$sub_field['slug']."]",
+													'field_value' => $current_values[$this->slug][$sub_field['slug']],
+													'enum_values' => $this->fields[$sub_field['slug']]['enum_values'],
+													'mapping' => true,
+													'field_key' => $sub_field['slug'],
+													'mapping_rules' => $current_values[$this->slug]['mapping'][$sub_field['slug']],
+													'xpath' => $current_values[$this->slug]['xpaths'][$sub_field['slug']],
+													'addon_prefix' => $this->slug,
+													'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values)
+												)
+											);
+											break;
+										default:
+											# code...
+											break;
+									}
+								}
+							}						
+						}
+					}				
+				}
+				return $sub_fields;
+			}
 
 		/* Get values of the add-ons fields for use in the metabox */
 		
@@ -388,6 +485,12 @@ if (!class_exists('RapidAddon')) {
 
 				foreach ($this->fields as $field_slug => $field_params) {
 					$options[$field_slug] = '';
+					if (!empty($field_params['enum_values'])){
+						foreach ($field_params['enum_values'] as $key => $value) {
+							$options[$field_slug] = $key;
+							break;
+						}
+					}
 				}
 
 				$default = array($this->slug => $options);				
@@ -432,17 +535,54 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-		function add_accordion( $main_field = false, $title = '', $fields = array() ){
-			if ( ! empty($fields) ){
+		/**
+		* 
+		* Add accordion options
+		*
+		*
+		*/
+		function add_options( $main_field = false, $title = '', $fields = array() ){
+			
+			if ( ! empty($fields) )
+			{
+				$count_sub_fields = count($fields);
+				foreach ($this->fields as $field_slug => $field) {
+					foreach ($fields as $accordion_field) {
+						if ($accordion_field['slug'] == $field_slug){
+							$this->fields[$field_slug]['is_sub_field'] = true;						
+							$this->get_subfields_count($accordion_field['enum_values'], $count_sub_fields);
+						}							
+					}						
+				}
+				
 				$this->accordions[] = array(
 					'title' => $title,
 					'fields' => $fields,
-					'order' => count($this->fields) - count($fields),
+					'order' => count($this->fields) - $count_sub_fields,
 					'is_full_width' => empty($main_field) ? true : false
 				);		
 				
 			}
 		}
+			/**
+			*
+			* Helper function for counting nested accordion fields
+			*
+			*/
+			function get_subfields_count($enum_values, &$count){
+				if (!empty($enum_values)){
+					foreach ($enum_values as $value) {
+						if (is_array($value)){
+							foreach ($value as $k => $v) {
+								if (is_array($v) and ! empty($this->fields[$v['slug']])){
+									$count++;
+									$this->get_subfields_count($v['enum_values'], $count);
+								}
+							}
+						}
+					}
+				}
+			}
 
 		function helper_metabox_accordion_top($name, $is_full_width, $in_the_bottom = false) {
 
@@ -450,55 +590,9 @@ if (!class_exists('RapidAddon')) {
 
 			if ( ! $in_the_bottom and $is_full_width ) $styles .= 'margin-top: 25px; margin-bottom: 25px;';
 
-			return '
-			<style type="text/css">
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options {
-					margin-bottom: 15px;					
-				}		
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
-					bottom: -40px;
-					margin-bottom: 0;
-					margin-left: -25px;
-					margin-right: -25px;
-					position: relative;						
-				}		
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-content-section{
-					border-bottom: 1px solid #ddd;
-					border-radius: 0;
-					-moz-border-radius-bottomleft: 4px;
-					-webkit-border-bottom-left-radius: 4px;
-					border-bottom-left-radius: 4px;
-					-moz-border-radius-bottomright: 4px;
-					-webkit-border-bottom-right-radius: 4px;
-					border-bottom-right-radius: 4px;					
-				}
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-content-section{
-					padding-bottom: 8px;
-					margin:0; 
-					border-top:1px solid #ddd; 
-					border-bottom: none; 
-					border-right: none; 
-					border-left: none; 
-					background: #f1f2f2;
-				}
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-content-section{					
-					margin:0; 
-					border-top:1px solid #ddd; 
-					border-bottom: none; 
-					border-right: none; 
-					border-left: none; 
-					background: #f1f2f2;
-				}
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header{
-					padding-left: 7px;
-				}
-				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header h3{
-					font-size: 14px;
-					margin: 6px 0;
-				}
-			</style>
-			<div class="wpallimport-collapsed closed wpallimport-section '. (($in_the_bottom and $is_full_width) ? 'wpallimport-sub-options-full-width' : 'wpallimport-sub-options') .' " style="'. $styles .'">
-				<div class="wpallimport-content-section rad0">
+			return '			
+			<div class="wpallimport-collapsed closed wpallimport-section '. (($in_the_bottom and $is_full_width) ? 'wpallimport-sub-options-full-width' : 'wpallimport-sub-options') .' ' . ((!$is_full_width) ? 'wpallimport-dependent-options' : '') . '" style="'. $styles .'">
+				<div class="wpallimport-content-section ' . (($is_full_width and !$in_the_bottom) ? 'rad0' : 'wpallimport-bottom-radius') . ' ">
 					<div class="wpallimport-collapsed-header">
 						<h3 style="color:#40acad;">'. $name .'</h3>	
 					</div>
@@ -543,6 +637,49 @@ if (!class_exists('RapidAddon')) {
 					border: 1px solid #ddd;
 					margin-bottom: 10px;
 				}
+				
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options {
+					margin-bottom: 15px;					
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-content-section{
+					padding-bottom: 8px;
+					margin:0; 
+					border: none;
+					padding-top: 1px;
+					background: #f1f2f2;				
+				}		
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header{
+					padding-left: 7px;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header h3{
+					font-size: 14px;
+					margin: 6px 0;
+				}
+
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
+					bottom: -41px;
+					margin-bottom: 0;
+					margin-left: -25px;
+					margin-right: -25px;
+					position: relative;						
+				}		
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-content-section{					
+					margin:0; 					
+					border-top:1px solid #ddd; 
+					border-bottom: none; 
+					border-right: none; 
+					border-left: none; 
+					background: #f1f2f2;									
+				}					
+
+				.wpallimport-plugin .wpallimport-addon .wpallimport-dependent-options{
+					margin-left: 1px;
+					margin-right: -1px;					
+				}		
+				.wpallimport-plugin .wpallimport-addon .wpallimport-dependent-options .wpallimport-content-section{
+					border: 1px solid #ddd;
+					border-top: none;
+				}
 			</style>
 			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.$this->slug.' closed">
 				<div class="wpallimport-content-section">
@@ -568,12 +705,16 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function import_files( $slug, $title ){
+			$this->import_images( $slug, $title, 'files');
+		}
+
 		/**
 		*
 		* simply add an additional section 
 		*
 		*/
-		function import_images( $slug, $title ){
+		function import_images( $slug, $title, $type = 'images' ){
 			
 			if ( empty($title) or empty($slug) ) return;
 
@@ -581,7 +722,8 @@ if (!class_exists('RapidAddon')) {
 
 			$this->image_sections[] = array(
 				'title' => $title,
-				'slug'  => $section_slug
+				'slug'  => $section_slug,
+				'type'  => $type
 			);			
 			
 			foreach ($this->image_options as $option_slug => $value) {
