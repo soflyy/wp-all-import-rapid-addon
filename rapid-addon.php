@@ -117,16 +117,24 @@ if (!class_exists('RapidAddon')) {
 
 		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
 
-			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "slug" => $field_slug);
+			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "is_main_field" => false, "slug" => $field_slug);
 
 			$this->fields[$field_slug] = $field;
 
 			if ( ! empty($enum_values) ){
 				foreach ($enum_values as $key => $value) {
-					if (is_array($value)){
-						foreach ($value as $n => $param) {
-							if (is_array($param) and ! empty($this->fields[$param['slug']])){
-								$this->fields[$param['slug']]['is_sub_field'] = true;								
+					if (is_array($value))
+					{
+						if ($field['type'] == 'accordion')
+						{
+							$this->fields[$value['slug']]['is_sub_field'] = true;
+						}
+						else
+						{
+							foreach ($value as $n => $param) {							
+								if (is_array($param) and ! empty($this->fields[$param['slug']])){
+									$this->fields[$param['slug']]['is_sub_field'] = true;								
+								}
 							}
 						}
 					}
@@ -284,31 +292,25 @@ if (!class_exists('RapidAddon')) {
 
 			$current_values = $this->helper_current_field_values();
 
-			$counter = 0;
+			$visible_fields = 0;
 
 			foreach ($this->fields as $field_slug => $field_params) {
+				if ($field_params['is_sub_field']) continue;
+				$visible_fields++;
+			}
 
-				$counter++;
+			$counter = 0;
+
+			foreach ($this->fields as $field_slug => $field_params) {				
 
 				// do not render sub fields
-				if ($field_params['is_sub_field']) continue;				
+				if ($field_params['is_sub_field']) continue;		
 
-				$this->render_field($field_params, $field_slug, $current_values);						
+				$counter++;		
 
-				$is_accordion = false;
-				foreach ($this->accordions as $accordion) {					
-					if ($accordion['order'] == $counter){
-						echo $this->helper_metabox_accordion_top($accordion['title'], $accordion['is_full_width'], $accordion['order'] == count($this->fields) - count($accordion['fields']));
-						foreach ($accordion['fields'] as $sub_field_params) {
-							if ( ! empty($this->fields[$sub_field_params['slug']]) )
-								$this->render_field($this->fields[$sub_field_params['slug']], $sub_field_params['slug'], $current_values);							
-						}
-						echo $this->helper_metabox_accordion_bottom();
-						$is_accordion = true;
-					}
-				}
+				$this->render_field($field_params, $field_slug, $current_values, $visible_fields == $counter);										
 
-				if ( ! $is_accordion ) echo "<br />";				
+				if ( $field_params['type'] != 'accordion' ) echo "<br />";				
 
 			}
 
@@ -327,7 +329,7 @@ if (!class_exists('RapidAddon')) {
 
 		}		
 
-		function render_field($field_params, $field_slug, $current_values){
+		function render_field($field_params, $field_slug, $current_values, $in_the_bottom = false){
 
 			if ($field_params['type'] == 'text') {
 
@@ -388,8 +390,23 @@ if (!class_exists('RapidAddon')) {
 					)
 				);
 
+			} else if($field_params['type'] == 'accordion') {
+
+				PMXI_API::add_field(
+					'accordion',
+					$field_params['name'],
+					array(						
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",																
+						'field_key' => $field_slug,								
+						'addon_prefix' => $this->slug,
+						'sub_fields' => $this->get_sub_fields($field_params, $field_slug, $current_values),
+						'in_the_bottom' => $in_the_bottom						
+					)
+				);
 
 			}
+
 
 		}
 			/**
@@ -403,74 +420,107 @@ if (!class_exists('RapidAddon')) {
 					foreach ($field_params['enum_values'] as $key => $value) {					
 						$sub_fields[$key] = array();	
 						if (is_array($value)){
-							foreach ($value as $k => $sub_field) {
-								if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']])){
-									switch ($this->fields[$sub_field['slug']]['type']) {
-										case 'text':
-											$sub_fields[$key][] = array(
-												'type'   => 'simple',
-												'label'  => $this->fields[$sub_field['slug']]['name'],
-												'params' => array(
-													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-													'field_name' => $this->slug."[".$sub_field['slug']."]",
-													'field_value' => $current_values[$this->slug][$sub_field['slug']]
-												)
-											);
-											break;
-										case 'textarea':
-											$sub_fields[$key][] = array(
-												'type'   => 'textarea',
-												'label'  => $this->fields[$sub_field['slug']]['name'],
-												'params' => array(
-													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-													'field_name' => $this->slug."[".$sub_field['slug']."]",
-													'field_value' => $current_values[$this->slug][$sub_field['slug']]
-												)
-											);
-											break;
-										case 'image':
-											$sub_fields[$key][] = array(
-												'type'   => 'image',
-												'label'  => $this->fields[$sub_field['slug']]['name'],
-												'params' => array(
-													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-													'field_name' => $this->slug."[".$sub_field['slug']."]",
-													'field_value' => $current_values[$this->slug][$sub_field['slug']],
-													'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
-													'field_key' => $sub_field['slug'],
-													'addon_prefix' => $this->slug
-												)
-											);
-											break;
-										case 'radio':
-											$sub_fields[$key][] = array(
-												'type'   => 'enum',
-												'label'  => $this->fields[$sub_field['slug']]['name'],
-												'params' => array(
-													'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-													'field_name' => $this->slug."[".$sub_field['slug']."]",
-													'field_value' => $current_values[$this->slug][$sub_field['slug']],
-													'enum_values' => $this->fields[$sub_field['slug']]['enum_values'],
-													'mapping' => true,
-													'field_key' => $sub_field['slug'],
-													'mapping_rules' => $current_values[$this->slug]['mapping'][$sub_field['slug']],
-													'xpath' => $current_values[$this->slug]['xpaths'][$sub_field['slug']],
-													'addon_prefix' => $this->slug,
-													'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values)
-												)
-											);
-											break;
-										default:
-											# code...
-											break;
-									}
+							if ($field_params['type'] == 'accordion'){								
+								$sub_fields[$key][] = $this->convert_field($value, $current_values);
+							}
+							else
+							{
+								foreach ($value as $k => $sub_field) {								
+									if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']]))
+									{									
+										$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);									
+									}								
 								}
-							}						
+							}
 						}
-					}				
+					}
 				}
 				return $sub_fields;
+			}			
+
+			function convert_field($sub_field, $current_values){
+				$field = array();
+				switch ($this->fields[$sub_field['slug']]['type']) {
+					case 'text':
+						$field = array(
+							'type'   => 'simple',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",
+								'field_value' => $current_values[$this->slug][$sub_field['slug']],
+								'is_main_field' => $sub_field['is_main_field']
+							)
+						);
+						break;
+					case 'textarea':
+						$field = array(
+							'type'   => 'textarea',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",
+								'field_value' => $current_values[$this->slug][$sub_field['slug']],
+								'is_main_field' => $sub_field['is_main_field']
+							)
+						);
+						break;
+					case 'image':
+						$field = array(
+							'type'   => 'image',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",
+								'field_value' => $current_values[$this->slug][$sub_field['slug']],
+								'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+								'field_key' => $sub_field['slug'],
+								'addon_prefix' => $this->slug,
+								'is_main_field' => $sub_field['is_main_field']
+							)
+						);
+						break;
+					case 'radio':
+						$field = array(
+							'type'   => 'enum',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",
+								'field_value' => $current_values[$this->slug][$sub_field['slug']],
+								'enum_values' => $this->fields[$sub_field['slug']]['enum_values'],
+								'mapping' => true,
+								'field_key' => $sub_field['slug'],
+								'mapping_rules' => $current_values[$this->slug]['mapping'][$sub_field['slug']],
+								'xpath' => $current_values[$this->slug]['xpaths'][$sub_field['slug']],
+								'addon_prefix' => $this->slug,
+								'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
+								'is_main_field' => $sub_field['is_main_field']
+							)
+						);
+						break;
+					case 'accordion':
+						$field = array(
+							'type'   => 'accordion',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",																
+								'field_key' => $sub_field['slug'],								
+								'addon_prefix' => $this->slug,
+								'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
+								'in_the_bottom' => false
+							)
+						);						
+						break;
+					default:
+						# code...
+						break;
+				}
+				return $field;
 			}
+
+			
 
 		/* Get values of the add-ons fields for use in the metabox */
 		
@@ -544,72 +594,20 @@ if (!class_exists('RapidAddon')) {
 		function add_options( $main_field = false, $title = '', $fields = array() ){
 			
 			if ( ! empty($fields) )
-			{
-				$count_sub_fields = count($fields);
-				foreach ($this->fields as $field_slug => $field) {
-					foreach ($fields as $accordion_field) {
-						if ($accordion_field['slug'] == $field_slug){
-							$this->fields[$field_slug]['is_sub_field'] = true;						
-							$this->get_subfields_count($accordion_field['enum_values'], $count_sub_fields);
-						}							
-					}						
-				}
+			{				
 				
-				$this->accordions[] = array(
-					'title' => $title,
-					'fields' => $fields,
-					'order' => count($this->fields) - $count_sub_fields,
-					'is_full_width' => empty($main_field) ? true : false
-				);		
-				
-			}
-		}
-			/**
-			*
-			* Helper function for counting nested accordion fields
-			*
-			*/
-			function get_subfields_count($enum_values, &$count){
-				if (!empty($enum_values)){
-					foreach ($enum_values as $value) {
-						if (is_array($value)){
-							foreach ($value as $k => $v) {
-								if (is_array($v) and ! empty($this->fields[$v['slug']])){
-									$count++;
-									$this->get_subfields_count($v['enum_values'], $count);
-								}
-							}
-						}
-					}
+				if ($main_field){
+
+					$main_field['is_main_field'] = true;
+					$fields[] = $main_field;
+
 				}
+
+				return $this->add_field('accordion_' . $fields[0]['slug'], $title, 'accordion', $fields);							
+			
 			}
 
-		function helper_metabox_accordion_top($name, $is_full_width, $in_the_bottom = false) {
-
-			$styles = ($is_full_width) ? 'margin-left: -25px; margin-right: -25px;' : 'margin-top: -16px;';
-
-			if ( ! $in_the_bottom and $is_full_width ) $styles .= 'margin-top: 25px; margin-bottom: 25px;';
-
-			return '			
-			<div class="wpallimport-collapsed closed wpallimport-section '. (($in_the_bottom and $is_full_width) ? 'wpallimport-sub-options-full-width' : 'wpallimport-sub-options') .' ' . ((!$is_full_width) ? 'wpallimport-dependent-options' : '') . '" style="'. $styles .'">
-				<div class="wpallimport-content-section ' . (($is_full_width and !$in_the_bottom) ? 'rad0' : 'wpallimport-bottom-radius') . ' ">
-					<div class="wpallimport-collapsed-header">
-						<h3 style="color:#40acad;">'. $name .'</h3>	
-					</div>
-					<div class="wpallimport-collapsed-content" style="padding: 0;">										
-						<div class="wpallimport-collapsed-content-inner">	
-			';
-		}
-
-		function helper_metabox_accordion_bottom() {
-
-			return '				
-						</div>
-					</div>
-				</div>
-			</div>';
-
-		}
+		}						
 
 		function helper_metabox_top($name) {
 
@@ -649,7 +647,7 @@ if (!class_exists('RapidAddon')) {
 					background: #f1f2f2;				
 				}		
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header{
-					padding-left: 7px;
+					padding-left: 13px;
 				}
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-collapsed-header h3{
 					font-size: 14px;
@@ -657,7 +655,7 @@ if (!class_exists('RapidAddon')) {
 				}
 
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
-					bottom: -41px;
+					bottom: -40px;
 					margin-bottom: 0;
 					margin-left: -25px;
 					margin-right: -25px;
@@ -705,6 +703,11 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		/**
+		*
+		* simply add an additional section for attachments
+		*
+		*/
 		function import_files( $slug, $title ){
 			$this->import_images( $slug, $title, 'files');
 		}
@@ -730,11 +733,19 @@ if (!class_exists('RapidAddon')) {
 				$this->add_option($section_slug . $option_slug, $value);
 			}
 
-			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);
+			if (count($this->image_sections) > 1){
+				add_filter('wp_all_import_is_show_add_new_images', array($this, 'filter_is_show_add_new_images'), 10, 2);
+			}
+
+			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
 			
 			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 4);
 		}			
-
+			/**
+			*
+			* filter to allow import images for free edition of WP All Import
+			*
+			*/
 			function is_allow_import_images($is_allow, $post_type){
 				return ($this->is_active_addon($post_type)) ? true : $is_allow;
 			}
@@ -750,8 +761,17 @@ if (!class_exists('RapidAddon')) {
 					$sections[] = $add_section;
 				}
 			}
+			
 			return $sections;
 		}
+			/**
+			*
+			* remove the 'Don't touch existing images, append new images' when more than one image section is in use.
+			*
+			*/
+			function filter_is_show_add_new_images($is_show, $post_type){
+				return ($this->is_active_addon($post_type)) ? false : $is_show;
+			}
 
 		/**
 		*
