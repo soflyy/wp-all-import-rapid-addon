@@ -655,7 +655,7 @@ if (!class_exists('RapidAddon')) {
 				}
 
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
-					bottom: -40px;
+					bottom: -41px;
 					margin-bottom: 0;
 					margin-left: -25px;
 					margin-right: -25px;
