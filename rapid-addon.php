@@ -310,7 +310,7 @@ if (!class_exists('RapidAddon')) {
 
 				$this->render_field($field_params, $field_slug, $current_values, $visible_fields == $counter);										
 
-				if ( $field_params['type'] != 'accordion' ) echo "<br />";				
+				//if ( $field_params['type'] != 'accordion' ) echo "<br />";				
 
 			}
 
