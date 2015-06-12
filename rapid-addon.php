@@ -678,6 +678,9 @@ if (!class_exists('RapidAddon')) {
 					border-left: none; 
 					background: #f1f2f2;									
 				}					
+				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width .wpallimport-collapsed-header h3{					
+					margin: 14px 0;
+				}
 
 				.wpallimport-plugin .wpallimport-addon .wpallimport-dependent-options{
 					margin-left: 1px;
