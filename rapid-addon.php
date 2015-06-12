@@ -66,7 +66,7 @@ if (!class_exists('RapidAddon')) {
 				$current_theme = wp_get_theme();
 				$theme_name = $current_theme->get('Name');
 				
-				$addon_active = (@in_array($theme_name, $this->active_themes)) ? true : false;
+				$addon_active = (@in_array($theme_name, $this->active_themes) or empty($this->active_themes)) ? true : false;
 				
 				if ( $addon_active and ! empty($this->active_plugins) ){
 
@@ -973,7 +973,6 @@ if (!class_exists('RapidAddon')) {
 	}	
 
 }
-
 
 
 
