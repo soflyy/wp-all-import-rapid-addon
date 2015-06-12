@@ -65,13 +65,21 @@ if (!class_exists('RapidAddon')) {
 				
 				$current_theme = wp_get_theme();
 				$theme_name = $current_theme->get('Name');
+				
+				$addon_active = (@in_array($theme_name, $this->active_themes)) ? true : false;
+				
+				if ( $addon_active and ! empty($this->active_plugins) ){
 
-				if (@in_array($theme_name, $this->active_themes)) {
-					$addon_active = true;
+					include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+					foreach ($this->active_plugins as $plugin) {
+						if ( ! is_plugin_active($plugin) ) {
+							$addon_active = false;
+							break;
+						}
+					}					
 				}
-				else{
-					$addon_active = false;
-				}
+
 			}
 
 			if ($this->when_to_run == "always") {
@@ -96,6 +104,7 @@ if (!class_exists('RapidAddon')) {
 
 			@$this->active_post_types = ( ! empty($conditions['post_types'])) ? $conditions['post_types'] : array();
 			@$this->active_themes = ( ! empty($conditions['themes'])) ? $conditions['themes'] : array();
+			@$this->active_plugins = ( ! empty($conditions['plugins'])) ? $conditions['plugins'] : array();			
 
 			add_filter('pmxi_addons', array($this, 'wpai_api_register'));
 			add_filter('wp_all_import_addon_parse', array($this, 'wpai_api_parse'));
@@ -655,7 +664,7 @@ if (!class_exists('RapidAddon')) {
 				}
 
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options-full-width{
-					bottom: -41px;
+					bottom: -40px;
 					margin-bottom: 0;
 					margin-left: -25px;
 					margin-right: -25px;
