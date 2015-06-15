@@ -13,6 +13,7 @@ if (!class_exists('RapidAddon')) {
 		public $import_function;
 		public $notice_text;
 		public $logger = null;
+		public $when_to_run = false;
 		public $image_options = array(
 			'download_images' => 'yes', 
 			'download_featured_delim' => ',', 
@@ -812,6 +813,8 @@ if (!class_exists('RapidAddon')) {
 				$this->logger = $parsingData['logger'];
 
 				$cxpath = $xpath_prefix . $import->xpath;
+
+				$tmp_files = array();
 
 				foreach ($options[$this->slug] as $option_name => $option_value) {
 
