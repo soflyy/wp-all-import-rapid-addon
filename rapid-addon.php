@@ -172,6 +172,7 @@ if (!class_exists('RapidAddon')) {
 			$options_list = array();
 
 			foreach ($this->fields as $field_slug => $field_params) {
+				if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
 				$options_list[$field_slug] = '';
 			}
 
@@ -244,6 +245,8 @@ if (!class_exists('RapidAddon')) {
 				$index = $importData['i'];
 
 				foreach ($this->fields as $field_slug => $field_params) {
+
+					if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
 
 					if ($field_params['type'] == 'image') {
 
@@ -414,6 +417,18 @@ if (!class_exists('RapidAddon')) {
 						'in_the_bottom' => $in_the_bottom						
 					)
 				);
+
+			} else if($field_params['type'] == 'title'){
+
+				?>
+				<h4><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a></h4>				
+				<?php
+
+			} else if($field_params['type'] == 'plain_text'){
+
+				?>
+				<p style="margin: 4px 0 8px 0;"><?php echo $field_params['name'];?></p>
+				<?php
 
 			}
 
@@ -617,7 +632,23 @@ if (!class_exists('RapidAddon')) {
 			
 			}
 
-		}						
+		}			
+
+		function add_title($title = '', $tooltip = ''){
+
+			if (empty($title)) return;
+
+			return $this->add_field(sanitize_key($title) . time(), $title, 'title', null, $tooltip);			
+
+		}		
+
+		function add_text($text = ''){
+
+			if (empty($text)) return;
+
+			return $this->add_field(sanitize_key($text) . time(), $text, 'plain_text');			
+
+		}			
 
 		function helper_metabox_top($name) {
 
