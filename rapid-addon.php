@@ -421,13 +421,13 @@ if (!class_exists('RapidAddon')) {
 			} else if($field_params['type'] == 'title'){
 
 				?>
-				<h4><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a></h4>				
+				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a></h4>				
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
 
 				?>
-				<p style="margin: 4px 0 8px 0;"><?php echo $field_params['name'];?></p>
+				<p style="margin: 0 0 12px 0;"><?php echo $field_params['name'];?></p>
 				<?php
 
 			}
@@ -678,7 +678,8 @@ if (!class_exists('RapidAddon')) {
 				}
 				
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options {
-					margin-bottom: 15px;					
+					margin-bottom: 15px;				
+					margin-top: -16px;	
 				}
 				.wpallimport-plugin .wpallimport-addon .wpallimport-sub-options .wpallimport-content-section{
 					padding-bottom: 8px;
@@ -721,6 +722,20 @@ if (!class_exists('RapidAddon')) {
 				.wpallimport-plugin .wpallimport-addon .wpallimport-dependent-options .wpallimport-content-section{
 					border: 1px solid #ddd;
 					border-top: none;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-full-with-bottom{
+					margin-left: -25px; 
+					margin-right: -25px;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-full-with-not-bottom{
+					margin: 25px -1px 25px 1px;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-full-with-not-bottom .wpallimport-content-section{
+					border: 1px solid #ddd;
+				}
+				.wpallimport-plugin .wpallimport-addon .wpallimport-add-on-options-title{
+					font-size: 14px;
+  					margin: 45px 0 15px 0;
 				}
 			</style>
 			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.$this->slug.' closed">
