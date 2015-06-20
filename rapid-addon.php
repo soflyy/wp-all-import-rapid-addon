@@ -421,7 +421,7 @@ if (!class_exists('RapidAddon')) {
 			} else if($field_params['type'] == 'title'){
 
 				?>
-				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a></h4>				
+				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])) { ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a><?php } ?></h4>
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
