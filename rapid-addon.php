@@ -330,12 +330,15 @@ if (!class_exists('RapidAddon')) {
 			echo $this->helper_metabox_bottom();
 
 			if ( ! empty($this->image_sections) ){				
-
-				foreach ($this->image_sections as $section) {
+				$is_images_section_enabled = apply_filters('wp_all_import_is_images_section_enabled', true, $post_type);						
+				foreach ($this->image_sections as $k => $section) {
 					$section_options = array();
 					foreach ($this->image_options as $slug => $value) {
 						$section_options[$section['slug'] . $slug] = $value;
 					}										
+					if ( ! $is_images_section_enabled and ! $k ){
+						$section_options[$section['slug'] . 'is_featured'] = 1;
+					}
 					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $this->helper_current_field_values($section_options), '', true, false, $section['type']);
 				}
 			}
@@ -421,7 +424,7 @@ if (!class_exists('RapidAddon')) {
 			} else if($field_params['type'] == 'title'){
 
 				?>
-				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])) { ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a><?php } ?></h4>
+				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a></h4>				
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
