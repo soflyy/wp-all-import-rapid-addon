@@ -173,8 +173,15 @@ if (!class_exists('RapidAddon')) {
 
 			foreach ($this->fields as $field_slug => $field_params) {
 				if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
-				$options_list[$field_slug] = '';
-			}
+				$default_value = '';
+				if (!empty($field_params['enum_values'])){
+					foreach ($field_params['enum_values'] as $key => $value) {						
+						$default_value = $key;
+						break;
+					}
+				}
+				$options_list[$field_slug] = $default_value;
+			}			
 
 			if ( ! empty($this->options) ){
 				foreach ($this->options as $slug => $value) {
@@ -565,7 +572,7 @@ if (!class_exists('RapidAddon')) {
 					$options[$field_slug] = '';
 					if (!empty($field_params['enum_values'])){
 						foreach ($field_params['enum_values'] as $key => $value) {
-							$options[$field_slug] = $key;
+							$options[$field_slug] = is_numeric($key) ? (int) $key : $key;
 							break;
 						}
 					}
