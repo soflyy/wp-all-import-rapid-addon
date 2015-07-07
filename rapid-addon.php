@@ -255,28 +255,47 @@ if (!class_exists('RapidAddon')) {
 
 					if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
 
-					if ($field_params['type'] == 'image') {
+					switch ($field_params['type']) {
 
-						// import the specified image, then set the value of the field to the image ID in the media library
+						case 'image':
+							
+							// import the specified image, then set the value of the field to the image ID in the media library
 
-						$image_url_or_path = $parsedData[$field_slug][$index];
+							$image_url_or_path = $parsedData[$field_slug][$index];
 
-						$download = $import_options['download_image'][$field_slug];
+							$download = $import_options['download_image'][$field_slug];
 
-						$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true);
+							$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true);
 
-						$data[$field_slug] = array(
-							"attachment_id" => $uploaded_image,
-							"image_url_or_path" => $image_url_or_path,
-							"download" => $download
-						);
+							$data[$field_slug] = array(
+								"attachment_id" => $uploaded_image,
+								"image_url_or_path" => $image_url_or_path,
+								"download" => $download
+							);
 
-					} else {
+							break;
 
-						// set the field data to the value of the field after it's been parsed
-						$data[$field_slug] = $parsedData[$field_slug][$index];
+						case 'file':
 
-					}
+							$image_url_or_path = $parsedData[$field_slug][$index];
+
+							$download = $import_options['download_image'][$field_slug];
+
+							$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files");
+
+							$data[$field_slug] = array(
+								"attachment_id" => $uploaded_file,
+								"image_url_or_path" => $image_url_or_path,
+								"download" => $download
+							);
+
+							break;
+						
+						default:
+							// set the field data to the value of the field after it's been parsed
+							$data[$field_slug] = $parsedData[$field_slug][$index];
+							break;
+					}					
 
 					// apply mapping rules if they exist
 					if ($import_options['mapping'][$field_slug]) {
@@ -378,10 +397,10 @@ if (!class_exists('RapidAddon')) {
 					)
 				);
 
-			} else if ($field_params['type'] == 'image') {
+			} else if ($field_params['type'] == 'image' or $field_params['type'] == 'file') {
 
 				PMXI_API::add_field(
-					'image',
+					$field_params['type'],
 					$field_params['name'],
 					array(
 						'tooltip' => $field_params['tooltip'],
@@ -503,6 +522,20 @@ if (!class_exists('RapidAddon')) {
 					case 'image':
 						$field = array(
 							'type'   => 'image',
+							'label'  => $this->fields[$sub_field['slug']]['name'],
+							'params' => array(
+								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+								'field_name' => $this->slug."[".$sub_field['slug']."]",
+								'field_value' => $current_values[$this->slug][$sub_field['slug']],
+								'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+								'field_key' => $sub_field['slug'],
+								'addon_prefix' => $this->slug,
+								'is_main_field' => $sub_field['is_main_field']
+							)
+						);
+					case 'file':
+						$field = array(
+							'type'   => 'file',
 							'label'  => $this->fields[$sub_field['slug']]['name'],
 							'params' => array(
 								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
