@@ -65,9 +65,18 @@ if (!class_exists('RapidAddon')) {
 			if ($addon_active){
 				
 				$current_theme = wp_get_theme();
+
+				$parent_theme = $current_theme->parent();				
+
 				$theme_name = $current_theme->get('Name');
 				
 				$addon_active = (@in_array($theme_name, $this->active_themes) or empty($this->active_themes)) ? true : false;
+
+				if ( ! $addon_active and $parent_theme ){
+					$parent_theme_name = $parent_theme->get('Name');
+					$addon_active = (@in_array($parent_theme_name, $this->active_themes) or empty($this->active_themes)) ? true : false;
+
+				}
 				
 				if ( $addon_active and ! empty($this->active_plugins) ){
 
@@ -1026,9 +1035,15 @@ if (!class_exists('RapidAddon')) {
 			if ( ! $is_show_notice and ! empty($conditions['themes']) ){
 
 				$themeInfo    = wp_get_theme();
+				$parentInfo = $themeInfo->parent();				
 				$currentTheme = $themeInfo->get('Name');
 				
 				$is_show_notice = in_array($currentTheme, $conditions['themes']) ? false : true;				
+
+				if ( ! $is_show_notice and $parentInfo ){
+					$parent_theme = $parentInfo->get('Name');
+					$is_show_notice = in_array($parent_theme, $conditions['themes']) ? false : true;					
+				}
 
 			}
 
