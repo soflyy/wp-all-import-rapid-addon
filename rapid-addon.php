@@ -457,7 +457,6 @@ if (!class_exists('RapidAddon')) {
 				);
 
 			} else if($field_params['type'] == 'title'){
-
 				?>
 				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])): ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a><?php endif; ?></h4>				
 				<?php
@@ -1040,7 +1039,7 @@ if (!class_exists('RapidAddon')) {
 				
 				$is_show_notice = in_array($currentTheme, $conditions['themes']) ? false : true;				
 
-				if ( ! $is_show_notice and $parentInfo ){
+				if ( $is_show_notice and $parentInfo ){
 					$parent_theme = $parentInfo->get('Name');
 					$is_show_notice = in_array($parent_theme, $conditions['themes']) ? false : true;					
 				}
