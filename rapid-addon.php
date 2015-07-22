@@ -914,9 +914,7 @@ if (!class_exists('RapidAddon')) {
 				$tmp_files = array();
 
 				foreach ($options[$this->slug] as $option_name => $option_value) {
-
-					if ( ! empty($import->options[$this->slug][$option_name]) ) {
-
+					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {
 						if ($import->options[$this->slug][$option_name] == "xpath") {
 							if ($import->options[$this->slug]['xpaths'][$option_name] == ""){
 								$count and $this->data[$option_name] = array_fill(0, $count, "");
@@ -1079,7 +1077,6 @@ if (!class_exists('RapidAddon')) {
 	}	
 
 }
-
 
 
 
