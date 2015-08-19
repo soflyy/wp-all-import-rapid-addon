@@ -11,6 +11,7 @@ if (!class_exists('RapidAddon')) {
 		public $accordions = array();
 		public $image_sections = array();
 		public $import_function;
+		public $post_saved_function;
 		public $notice_text;
 		public $logger = null;
 		public $when_to_run = false;
@@ -50,6 +51,10 @@ if (!class_exists('RapidAddon')) {
 
 		function set_import_function($name) {
 			$this->import_function = $name;
+		}
+
+		function set_post_saved_function($name) {
+			$this->post_saved_function = $name;
 		}
 
 		function is_active_addon($post_type = null) {
@@ -119,6 +124,7 @@ if (!class_exists('RapidAddon')) {
 			add_filter('pmxi_addons', array($this, 'wpai_api_register'));
 			add_filter('wp_all_import_addon_parse', array($this, 'wpai_api_parse'));
 			add_filter('wp_all_import_addon_import', array($this, 'wpai_api_import'));
+			add_filter('wp_all_import_addon_saved_post', array($this, 'wpai_api_post_saved'));
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
 			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
@@ -231,6 +237,11 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function wpai_api_post_saved($functions){
+			$functions[$this->slug] = array($this, 'post_saved');
+			return $functions;
+		}
+
 
 		function wpai_api_import($functions) {
 
@@ -239,7 +250,11 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function post_saved( $importData ){
 
+			call_user_func($this->post_saved_function, $importData['pid'], $importData['import'], $importData['logger']);
+			
+		}
 
 		function import($importData, $parsedData) {
 
@@ -324,7 +339,7 @@ if (!class_exists('RapidAddon')) {
 
 				}
 
-				call_user_func($this->import_function, $post_id, $data, $importData['import']);
+				call_user_func($this->import_function, $post_id, $data, $importData['import'], $importData['articleData'], $importData['logger']);
 			}
 
 		}
