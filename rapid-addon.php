@@ -56,7 +56,7 @@ if (!class_exists('RapidAddon')) {
 			
 			$addon_active = false;
 
-			if ($post_type != null) {
+			if ($post_type !== null) {
 				if (@in_array($post_type, $this->active_post_types) or empty($this->active_post_types)) {
 					$addon_active = true;
 				}
@@ -121,7 +121,7 @@ if (!class_exists('RapidAddon')) {
 			add_filter('wp_all_import_addon_import', array($this, 'wpai_api_import'));
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
 			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
-			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 1);
+			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
 			add_action('admin_init', array($this, 'admin_notice_ignore'));
 
 		}
@@ -330,15 +330,13 @@ if (!class_exists('RapidAddon')) {
 		}
 
 
-		function wpai_api_metabox($post_type) {
+		function wpai_api_metabox($post_type, $current_values) {
 
 			if (!$this->is_active_addon($post_type)) {
 				return;
 			}
 
 			echo $this->helper_metabox_top($this->name);
-
-			$current_values = $this->helper_current_field_values();
 
 			$visible_fields = 0;
 
@@ -374,7 +372,7 @@ if (!class_exists('RapidAddon')) {
 					if ( ! $is_images_section_enabled and ! $k ){
 						$section_options[$section['slug'] . 'is_featured'] = 1;
 					}
-					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $this->helper_current_field_values($section_options), '', true, false, $section['type']);
+					PMXI_API::add_additional_images_section($section['title'], $section['slug'], $current_values, '', true, false, $section['type']);
 				}
 			}
 
@@ -471,195 +469,130 @@ if (!class_exists('RapidAddon')) {
 
 
 		}
-			/**
-			*
-			* Helper function for nested radio fields
-			*
-			*/
-			function get_sub_fields($field_params, $field_slug, $current_values){
-				$sub_fields = array();	
-				if ( ! empty($field_params['enum_values']) ){										
-					foreach ($field_params['enum_values'] as $key => $value) {					
-						$sub_fields[$key] = array();	
-						if (is_array($value)){
-							if ($field_params['type'] == 'accordion'){								
-								$sub_fields[$key][] = $this->convert_field($value, $current_values);
-							}
-							else
-							{
-								foreach ($value as $k => $sub_field) {								
-									if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']]))
-									{									
-										$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);									
-									}								
-								}
+		/**
+		*
+		* Helper function for nested radio fields
+		*
+		*/
+		function get_sub_fields($field_params, $field_slug, $current_values){
+			$sub_fields = array();	
+			if ( ! empty($field_params['enum_values']) ){										
+				foreach ($field_params['enum_values'] as $key => $value) {					
+					$sub_fields[$key] = array();	
+					if (is_array($value)){
+						if ($field_params['type'] == 'accordion'){								
+							$sub_fields[$key][] = $this->convert_field($value, $current_values);
+						}
+						else
+						{
+							foreach ($value as $k => $sub_field) {								
+								if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']]))
+								{									
+									$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);									
+								}								
 							}
 						}
 					}
 				}
-				return $sub_fields;
-			}			
-
-			function convert_field($sub_field, $current_values){
-				$field = array();
-				switch ($this->fields[$sub_field['slug']]['type']) {
-					case 'text':
-						$field = array(
-							'type'   => 'simple',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",
-								'field_value' => $current_values[$this->slug][$sub_field['slug']],
-								'is_main_field' => $sub_field['is_main_field']
-							)
-						);
-						break;
-					case 'textarea':
-						$field = array(
-							'type'   => 'textarea',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",
-								'field_value' => $current_values[$this->slug][$sub_field['slug']],
-								'is_main_field' => $sub_field['is_main_field']
-							)
-						);
-						break;
-					case 'image':
-						$field = array(
-							'type'   => 'image',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",
-								'field_value' => $current_values[$this->slug][$sub_field['slug']],
-								'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
-								'field_key' => $sub_field['slug'],
-								'addon_prefix' => $this->slug,
-								'is_main_field' => $sub_field['is_main_field']
-							)
-						);
-					case 'file':
-						$field = array(
-							'type'   => 'file',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",
-								'field_value' => $current_values[$this->slug][$sub_field['slug']],
-								'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
-								'field_key' => $sub_field['slug'],
-								'addon_prefix' => $this->slug,
-								'is_main_field' => $sub_field['is_main_field']
-							)
-						);
-						break;
-					case 'radio':
-						$field = array(
-							'type'   => 'enum',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",
-								'field_value' => $current_values[$this->slug][$sub_field['slug']],
-								'enum_values' => $this->fields[$sub_field['slug']]['enum_values'],
-								'mapping' => true,
-								'field_key' => $sub_field['slug'],
-								'mapping_rules' => $current_values[$this->slug]['mapping'][$sub_field['slug']],
-								'xpath' => $current_values[$this->slug]['xpaths'][$sub_field['slug']],
-								'addon_prefix' => $this->slug,
-								'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
-								'is_main_field' => $sub_field['is_main_field']
-							)
-						);
-						break;
-					case 'accordion':
-						$field = array(
-							'type'   => 'accordion',
-							'label'  => $this->fields[$sub_field['slug']]['name'],
-							'params' => array(
-								'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-								'field_name' => $this->slug."[".$sub_field['slug']."]",																
-								'field_key' => $sub_field['slug'],								
-								'addon_prefix' => $this->slug,
-								'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
-								'in_the_bottom' => false
-							)
-						);						
-						break;
-					default:
-						# code...
-						break;
-				}
-				return $field;
 			}
+			return $sub_fields;
+		}			
 
-			
-
-		/* Get values of the add-ons fields for use in the metabox */
-		
-		function helper_current_field_values($default = array()) {
-
-			if (empty($default)){
-
-				$options = array(
-					'mapping' => array(),
-					'xpaths' => array()
-				);
-
-				foreach ($this->fields as $field_slug => $field_params) {
-					$options[$field_slug] = '';
-					if (!empty($field_params['enum_values'])){
-						foreach ($field_params['enum_values'] as $key => $value) {
-							$options[$field_slug] = is_numeric($key) ? (int) $key : $key;
-							break;
-						}
-					}
-				}
-
-				$default = array($this->slug => $options);				
-
-			}			
-
-			$input = new PMXI_Input();
-
-			$id = $input->get('id');
-
-			$import = new PMXI_Import_Record();			
-			if ( ! $id or $import->getById($id)->isEmpty()) { // specified import is not found
-				$post = $input->post(			
-					$default			
-				);
+		function convert_field($sub_field, $current_values){
+			$field = array();
+			switch ($this->fields[$sub_field['slug']]['type']) {
+				case 'text':
+					$field = array(
+						'type'   => 'simple',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+					break;
+				case 'textarea':
+					$field = array(
+						'type'   => 'textarea',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+					break;
+				case 'image':
+					$field = array(
+						'type'   => 'image',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+							'field_key' => $sub_field['slug'],
+							'addon_prefix' => $this->slug,
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+				case 'file':
+					$field = array(
+						'type'   => 'file',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+							'field_key' => $sub_field['slug'],
+							'addon_prefix' => $this->slug,
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+					break;
+				case 'radio':
+					$field = array(
+						'type'   => 'enum',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'enum_values' => $this->fields[$sub_field['slug']]['enum_values'],
+							'mapping' => true,
+							'field_key' => $sub_field['slug'],
+							'mapping_rules' => $current_values[$this->slug]['mapping'][$sub_field['slug']],
+							'xpath' => $current_values[$this->slug]['xpaths'][$sub_field['slug']],
+							'addon_prefix' => $this->slug,
+							'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+					break;
+				case 'accordion':
+					$field = array(
+						'type'   => 'accordion',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",																
+							'field_key' => $sub_field['slug'],								
+							'addon_prefix' => $this->slug,
+							'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
+							'in_the_bottom' => false
+						)
+					);						
+					break;
+				default:
+					# code...
+					break;
 			}
-			else {
-				$post = $input->post(
-					$import->options
-					+ $default			
-				);		
-			}
-			
-			$is_loaded_template = (!empty(PMXI_Plugin::$session->is_loaded_template)) ? PMXI_Plugin::$session->is_loaded_template : false;		
-
-			$load_options = $input->post('load_template');
-
-			if ($load_options) { // init form with template selected
-				
-				$template = new PMXI_Template_Record();
-				if ( ! $template->getById($is_loaded_template)->isEmpty()) {	
-					$post = (!empty($template->options) ? $template->options : array()) + $default;				
-				}
-				
-			} elseif ($load_options == -1){
-				
-				$post = $default;
-								
-			}
-
-			return $post;
-
-		}
+			return $field;
+		}				
 
 		/**
 		* 
@@ -1077,6 +1010,5 @@ if (!class_exists('RapidAddon')) {
 	}	
 
 }
-
 
 
