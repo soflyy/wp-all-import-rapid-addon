@@ -945,7 +945,7 @@ if (!class_exists('RapidAddon')) {
 
 				?>
 
-	    		<div class="updated notice">
+	    		<div class="updated notice" style="margin-top: 10px;">
 	    		    <p><?php _e(
 		    		    	sprintf(
 	    			    		$notice_text.' | <a href="%1$s">Hide Notice</a>',
