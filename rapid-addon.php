@@ -128,7 +128,7 @@ if (!class_exists('RapidAddon')) {
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
 			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
-			add_action('admin_init', array($this, 'admin_notice_ignore'));
+			add_action('admin_init', array($this, 'admin_notice_ignore'));			
 
 		}
 
@@ -941,11 +941,11 @@ if (!class_exists('RapidAddon')) {
 				$notice_text = $this->name.' requires WP All Import <a href="http://www.wpallimport.com/" target="_blank">Pro</a> or <a href="http://wordpress.org/plugins/wp-all-import" target="_blank">Free</a>.';
 			}
 
-			if (!get_option($this->slug.'_ignore')) {
+			if (!get_option($this->slug.'_ignore') and preg_match('%(pmxi-admin)%i', $_GET['page'])) {
 
 				?>
 
-	    		<div class="error">
+	    		<div class="updated notice">
 	    		    <p><?php _e(
 		    		    	sprintf(
 	    			    		$notice_text.' | <a href="%1$s">Hide Notice</a>',
@@ -990,7 +990,7 @@ if (!class_exists('RapidAddon')) {
 					$is_show_notice = in_array($parent_theme, $conditions['themes']) ? false : true;					
 				}
 
-			}
+			}			
 
 			// Required Plugins
 			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){				
