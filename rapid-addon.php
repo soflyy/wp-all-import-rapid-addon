@@ -941,11 +941,11 @@ if (!class_exists('RapidAddon')) {
 				$notice_text = $this->name.' requires WP All Import <a href="http://www.wpallimport.com/" target="_blank">Pro</a> or <a href="http://wordpress.org/plugins/wp-all-import" target="_blank">Free</a>.';
 			}
 
-			if (!get_option($this->slug.'_ignore') and preg_match('%(pmxi-admin)%i', $_GET['page'])) {
+			if (!get_option($this->slug.'_ignore')) {
 
 				?>
 
-	    		<div class="updated notice" style="margin-top: 10px;">
+	    		<div class="error" style="margin-top: 10px;">
 	    		    <p><?php _e(
 		    		    	sprintf(
 	    			    		$notice_text.' | <a href="%1$s">Hide Notice</a>',
