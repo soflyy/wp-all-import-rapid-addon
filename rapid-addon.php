@@ -204,7 +204,8 @@ if (!class_exists('RapidAddon')) {
 				}
 			}
 
-			$options_arr[$this->slug] = $options_list;
+			$options_arr[$this->slug]   = $options_list;
+			$options_arr['rapid_addon'] = plugin_basename( __FILE__ );
 
 			return $options_arr;
 
