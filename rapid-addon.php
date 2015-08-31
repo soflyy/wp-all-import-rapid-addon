@@ -942,14 +942,14 @@ if (!class_exists('RapidAddon')) {
 				$notice_text = $this->name.' requires WP All Import <a href="http://www.wpallimport.com/" target="_blank">Pro</a> or <a href="http://wordpress.org/plugins/wp-all-import" target="_blank">Free</a>.';
 			}
 
-			if (!get_option($this->slug.'_ignore')) {
+			if (!get_option(sanitize_key($this->slug).'_notice_ignore')) {
 
 				?>
 
-	    		<div class="error" style="margin-top: 10px;">
+	    		<div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php echo sanitize_key($this->slug); ?>">
 	    		    <p><?php _e(
 		    		    	sprintf(
-	    			    		$notice_text.' | <a href="%1$s">Hide Notice</a>',
+	    			    		$notice_text,
 	    			    		'?'.$this->slug.'_ignore=0'
 	    			    	), 
 	    		    		'rapid_addon_'.$this->slug
