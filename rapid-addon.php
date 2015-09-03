@@ -253,7 +253,8 @@ if (!class_exists('RapidAddon')) {
 
 		function post_saved( $importData ){
 
-			call_user_func($this->post_saved_function, $importData['pid'], $importData['import'], $importData['logger']);
+			if (is_callable($this->post_saved_function))
+				call_user_func($this->post_saved_function, $importData['pid'], $importData['import'], $importData['logger']);
 			
 		}
 
