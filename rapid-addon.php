@@ -137,6 +137,8 @@ if (!class_exists('RapidAddon')) {
 		}
 
 		function parse($data) {
+			
+			if ( ! $this->is_active_addon($data['import']->options['custom_type'])) return false;
 
 			$parsedData = $this->helper_parse($data, $this->options_array());
 			return $parsedData;
@@ -867,8 +869,8 @@ if (!class_exists('RapidAddon')) {
 
 				$tmp_files = array();
 
-				foreach ($options[$this->slug] as $option_name => $option_value) {
-					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {
+				foreach ($options[$this->slug] as $option_name => $option_value) {					
+					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {						
 						if ($import->options[$this->slug][$option_name] == "xpath") {
 							if ($import->options[$this->slug]['xpaths'][$option_name] == ""){
 								$count and $this->data[$option_name] = array_fill(0, $count, "");
@@ -876,7 +878,8 @@ if (!class_exists('RapidAddon')) {
 								$data[$option_name] = XmlImportParser::factory($xml, $cxpath, $import->options[$this->slug]['xpaths'][$option_name], $file)->parse($records);
 								$tmp_files[] = $file;						
 							}
-						} else {
+						} 
+						else {							
 							$data[$option_name] = XmlImportParser::factory($xml, $cxpath, $import->options[$this->slug][$option_name], $file)->parse();
 							$tmp_files[] = $file;
 						}
