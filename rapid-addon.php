@@ -19,6 +19,8 @@ if (!class_exists('RapidAddon')) {
 			'download_images' => 'yes', 
 			'download_featured_delim' => ',', 
 			'download_featured_image' => '',
+			'gallery_featured_image' => '',
+			'gallery_featured_delim' => ',',
 			'featured_image' => '',
 			'featured_delim' => ',', 
 			'search_existing_images' => 1,
