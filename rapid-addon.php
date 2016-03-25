@@ -37,6 +37,7 @@ if (!class_exists('RapidAddon')) {
 			'image_meta_alt' => '',
 			'set_image_meta_description' => 0,
 			'image_meta_description_delim' => ',',
+			'image_meta_description_delim_logic' => 'separate',
 			'image_meta_description' => '',
 			'auto_rename_images' => 0,
 			'auto_rename_images_suffix' => '',
