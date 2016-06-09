@@ -405,6 +405,8 @@ if (!class_exists('RapidAddon')) {
 		}		
 
 		function render_field($field_params, $field_slug, $current_values, $in_the_bottom = false){
+			
+			if (empty($current_values[$this->slug][$field_slug])) { $current_values[$this->slug][$field_slug] = ''; }
 
 			if ($field_params['type'] == 'text') {
 
@@ -431,6 +433,8 @@ if (!class_exists('RapidAddon')) {
 				);
 
 			} else if ($field_params['type'] == 'image' or $field_params['type'] == 'file') {
+				
+				if (empty($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
 
 				PMXI_API::add_field(
 					$field_params['type'],
@@ -447,6 +451,9 @@ if (!class_exists('RapidAddon')) {
 				);
 
 			} else if ($field_params['type'] == 'radio') {					
+				
+				if (empty($current_values[$this->slug]['mapping'][$field_slug])) { $current_values[$this->slug]['mapping'][$field_slug] = ''; }
+				if (empty($current_values[$this->slug]['xpaths'][$field_slug])) { $current_values[$this->slug]['xpaths'][$field_slug] = ''; }
 
 				PMXI_API::add_field(
 					'enum',
@@ -1037,5 +1044,4 @@ if (!class_exists('RapidAddon')) {
 	}	
 
 }
-
 
