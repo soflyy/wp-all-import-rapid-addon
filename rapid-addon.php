@@ -434,7 +434,7 @@ if (!class_exists('RapidAddon')) {
 
 			} else if ($field_params['type'] == 'image' or $field_params['type'] == 'file') {
 				
-				if (!empty($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
+				if (!isset($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
 
 				PMXI_API::add_field(
 					$field_params['type'],
