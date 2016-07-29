@@ -149,9 +149,9 @@ if (!class_exists('RapidAddon')) {
 		}
 
 
-		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "") {
+		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "", $is_html = true) {
 
-			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "is_main_field" => false, "slug" => $field_slug);
+			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "is_main_field" => false, "slug" => $field_slug, "is_html" => $is_html);
 
 			$this->fields[$field_slug] = $field;
 
@@ -493,11 +493,13 @@ if (!class_exists('RapidAddon')) {
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
-
-				?>
-				<p style="margin: 0 0 12px 0;"><?php echo $field_params['name'];?></p>
-				<?php
-
+				if ($field_params['is_html']):
+					echo $field_params['name'];				
+				else:
+					?>
+					<p style="margin: 0 0 12px 0;"><?php echo $field_params['name'];?></p>
+					<?php
+				endif;
 			}
 
 
@@ -659,11 +661,11 @@ if (!class_exists('RapidAddon')) {
 
 		}		
 
-		function add_text($text = ''){
+		function add_text($text = '', $is_html = false){
 
 			if (empty($text)) return;
 
-			return $this->add_field(sanitize_key($text) . time(), $text, 'plain_text');			
+			return $this->add_field(sanitize_key($text) . time(), $text, 'plain_text', null, "", $is_html);			
 
 		}			
 
