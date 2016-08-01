@@ -493,7 +493,7 @@ if (!class_exists('RapidAddon')) {
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
-				if ($field_params['is_html']):
+				if ($field_params['is_html']):					
 					echo $field_params['name'];				
 				else:
 					?>
@@ -665,7 +665,7 @@ if (!class_exists('RapidAddon')) {
 
 			if (empty($text)) return;
 
-			return $this->add_field(sanitize_key($text) . time(), $text, 'plain_text', null, "", $is_html);			
+			return $this->add_field(sanitize_key($text) . time() . uniqid() . count($this->fields), $text, 'plain_text', null, "", $is_html);			
 
 		}			
 
