@@ -933,6 +933,26 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
+		function can_update_taxonomy($tax_name, $import_options) {
+
+			//echo "<pre>";
+			//print_r($import_options['options']);
+			//echo "</pre>";
+			
+			$import_options = $import_options['options'];
+
+			if ($import_options['update_all_data'] == 'yes') return true;
+
+			if ( ! $import_options['is_update_categories'] ) return false;			
+
+			if ($import_options['update_categories_logic'] == "full_update") return true;
+			if ($import_options['update_categories_logic'] == "only" and ! empty($import_options['taxonomies_list']) and is_array($import_options['taxonomies_list']) and in_array($tax_name, $import_options['taxonomies_list']) ) return true;
+			if ($import_options['update_categories_logic'] == "all_except" and ( empty($import_options['taxonomies_list']) or ! in_array($tax_name, $import_options['taxonomies_list']) )) return true;
+
+			return false;
+
+		}
+
 		function can_update_image($import_options) {
 
 			$import_options = $import_options['options'];
