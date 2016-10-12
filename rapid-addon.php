@@ -42,7 +42,8 @@ if (!class_exists('RapidAddon')) {
 			'auto_rename_images' => 0,
 			'auto_rename_images_suffix' => '',
 			'auto_set_extension' => 0,
-			'new_extension' => ''
+			'new_extension' => '',
+			'do_not_remove_images' => 1,
 		);	
 
 		function __construct($name, $slug) {
