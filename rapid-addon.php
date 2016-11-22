@@ -106,10 +106,10 @@ if (!class_exists('RapidAddon')) {
 			}
 
 			if ($this->when_to_run == "always") {
-				return true;
+				$addon_active = true;
 			}
 
-			return $addon_active;
+			return apply_filters('rapid_is_active_add_on', $addon_active, $post_type, $this->slug);
 		}
 		
 		/**
