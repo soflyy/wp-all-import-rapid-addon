@@ -44,13 +44,19 @@ if (!class_exists('RapidAddon')) {
 			'auto_set_extension' => 0,
 			'new_extension' => '',
 			'do_not_remove_images' => 1,
-		);	
+		);
+
+		protected $isWizard = true;
 
 		function __construct($name, $slug) {
 
 			$this->name = $name;
 			$this->slug = $slug;
-
+			$input = new PMXI_Input();
+			$id = $input->get('id');
+			if (!empty($id)){
+				$this->isWizard = false;
+			}
 		}
 
 		function set_import_function($name) {
@@ -150,9 +156,9 @@ if (!class_exists('RapidAddon')) {
 		}
 
 
-		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "", $is_html = true) {
+		function add_field($field_slug, $field_name, $field_type, $enum_values = null, $tooltip = "", $is_html = true, $default_text = '') {
 
-			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "is_main_field" => false, "slug" => $field_slug, "is_html" => $is_html);
+			$field =  array("name" => $field_name, "type" => $field_type, "enum_values" => $enum_values, "tooltip" => $tooltip, "is_sub_field" => false, "is_main_field" => false, "slug" => $field_slug, "is_html" => $is_html, 'default_text' => $default_text);
 
 			$this->fields[$field_slug] = $field;
 
@@ -446,7 +452,7 @@ if (!class_exists('RapidAddon')) {
 					array(
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
-						'field_value' => $current_values[$this->slug][$field_slug]
+						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
 					)
 				);
 
@@ -458,7 +464,7 @@ if (!class_exists('RapidAddon')) {
 					array(
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
-						'field_value' => $current_values[$this->slug][$field_slug]
+						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
 					)
 				);
 
