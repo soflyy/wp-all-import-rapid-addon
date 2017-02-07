@@ -52,8 +52,7 @@ if (!class_exists('RapidAddon')) {
 
 			$this->name = $name;
 			$this->slug = $slug;
-			$input = new PMXI_Input();
-			$id = $input->get('id');
+			$id = $_GET['id'];
 			if (!empty($id)){
 				$this->isWizard = false;
 			}
