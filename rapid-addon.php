@@ -52,8 +52,7 @@ if (!class_exists('RapidAddon')) {
 
 			$this->name = $name;
 			$this->slug = $slug;
-			$id = $_GET['id'];
-			if (!empty($id)){
+			if (!empty($_GET['id'])){
 				$this->isWizard = false;
 			}
 		}
