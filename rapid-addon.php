@@ -466,6 +466,18 @@ if (!class_exists('RapidAddon')) {
 					)
 				);
 
+			} else if ($field_params['type'] == 'wp_editor') {
+
+				PMXI_API::add_field(
+					'wp_editor',
+					$field_params['name'],
+					array(
+						'tooltip' => $field_params['tooltip'],
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
+					)
+				);
+
 			} else if ($field_params['type'] == 'image' or $field_params['type'] == 'file') {
 				
 				if (!isset($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
@@ -587,7 +599,7 @@ if (!class_exists('RapidAddon')) {
 						'params' => array(
 							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
 							'field_name' => $this->slug."[".$sub_field['slug']."]",
-							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'field_value' => ($current_values[$this->slug][$sub_field['slug']] == '' && $this->isWizard) ? $sub_field['default_text'] : $current_values[$this->slug][$sub_field['slug']],
 							'is_main_field' => $sub_field['is_main_field']
 						)
 					);
@@ -599,7 +611,19 @@ if (!class_exists('RapidAddon')) {
 						'params' => array(
 							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
 							'field_name' => $this->slug."[".$sub_field['slug']."]",
-							'field_value' => $current_values[$this->slug][$sub_field['slug']],
+							'field_value' => ($current_values[$this->slug][$sub_field['slug']] == '' && $this->isWizard) ? $sub_field['default_text'] : $current_values[$this->slug][$sub_field['slug']],
+							'is_main_field' => $sub_field['is_main_field']
+						)
+					);
+					break;
+				case 'wp_editor':
+					$field = array(
+						'type'   => 'wp_editor',
+						'label'  => $this->fields[$sub_field['slug']]['name'],
+						'params' => array(
+							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_value' => ($current_values[$this->slug][$sub_field['slug']] == '' && $this->isWizard) ? $sub_field['default_text'] : $current_values[$this->slug][$sub_field['slug']],
 							'is_main_field' => $sub_field['is_main_field']
 						)
 					);
