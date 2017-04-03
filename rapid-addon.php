@@ -439,8 +439,10 @@ if (!class_exists('RapidAddon')) {
 		}		
 
 		function render_field($field_params, $field_slug, $current_values, $in_the_bottom = false){
-			
-			if (!isset($current_values[$this->slug][$field_slug])) { $current_values[$this->slug][$field_slug] = ''; }
+
+			if (!isset($current_values[$this->slug][$field_slug])) {
+				$current_values[$this->slug][$field_slug] = isset($field_params['default_text']) ? $field_params['default_text'] : '';
+			}
 
 			if ($field_params['type'] == 'text') {
 
@@ -450,7 +452,7 @@ if (!class_exists('RapidAddon')) {
 					array(
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
-						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
+						'field_value' => ( $current_values[$this->slug][$field_slug] == '' && $this->isWizard ) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
 					)
 				);
 
@@ -462,7 +464,7 @@ if (!class_exists('RapidAddon')) {
 					array(
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
-						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
+						'field_value' => ( $current_values[$this->slug][$field_slug] == '' && $this->isWizard ) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
 					)
 				);
 
@@ -474,7 +476,7 @@ if (!class_exists('RapidAddon')) {
 					array(
 						'tooltip' => $field_params['tooltip'],
 						'field_name' => $this->slug."[".$field_slug."]",
-						'field_value' => ($current_values[$this->slug][$field_slug] == '' && $this->isWizard) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
+						'field_value' => ( $current_values[$this->slug][$field_slug] == '' && $this->isWizard ) ? $field_params['default_text'] : $current_values[$this->slug][$field_slug]
 					)
 				);
 
@@ -579,7 +581,7 @@ if (!class_exists('RapidAddon')) {
 							foreach ($value as $k => $sub_field) {								
 								if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']]))
 								{									
-									$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);									
+									$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);
 								}								
 							}
 						}
@@ -591,6 +593,9 @@ if (!class_exists('RapidAddon')) {
 
 		function convert_field($sub_field, $current_values){
 			$field = array();
+			if (!isset($current_values[$this->slug][$sub_field['slug']])) {
+				$current_values[$this->slug][$sub_field['slug']] = isset($sub_field['default_text']) ? $sub_field['default_text'] : '';
+			}
 			switch ($this->fields[$sub_field['slug']]['type']) {
 				case 'text':
 					$field = array(
