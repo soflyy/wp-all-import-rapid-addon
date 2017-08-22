@@ -1,4 +1,12 @@
 <?php
+/**
+ * RapidAddon
+ *
+ * @package     WP All Import RapidAddon
+ * @copyright   Copyright (c) 2014, Soflyy
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.1.0
+ */
 
 if (!class_exists('RapidAddon')) {
 	
