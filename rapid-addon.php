@@ -380,7 +380,7 @@ if (!class_exists('RapidAddon')) {
 
 						if (!empty($mapping_rules) and is_array($mapping_rules)) {
 							foreach ($mapping_rules as $rule_number => $map_to) {
-								if (!empty($map_to[trim($data[$field_slug])])){
+								if (isset($map_to[trim($data[$field_slug])])){
 									$data[$field_slug] = trim($map_to[trim($data[$field_slug])]);
 									break;
 								}
