@@ -327,70 +327,68 @@ if (!class_exists('RapidAddon')) {
 
 				$post_id = $importData['pid'];
 				$index = $importData['i'];
+				$data = array();
+				if (!empty($this->fields)){
+					foreach ($this->fields as $field_slug => $field_params) {
+						if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
+						switch ($field_params['type']) {
 
-				foreach ($this->fields as $field_slug => $field_params) {
+							case 'image':
+								
+								// import the specified image, then set the value of the field to the image ID in the media library
 
-					if (in_array($field_params['type'], array('title', 'plain_text'))) continue;
+								$image_url_or_path = $parsedData[$field_slug][$index];
 
-					switch ($field_params['type']) {
+								$download = $import_options['download_image'][$field_slug];
 
-						case 'image':
+								$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true);
+
+								$data[$field_slug] = array(
+									"attachment_id" => $uploaded_image,
+									"image_url_or_path" => $image_url_or_path,
+									"download" => $download
+								);
+
+								break;
+
+							case 'file':
+
+								$image_url_or_path = $parsedData[$field_slug][$index];
+
+								$download = $import_options['download_image'][$field_slug];
+
+								$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files");
+
+								$data[$field_slug] = array(
+									"attachment_id" => $uploaded_file,
+									"image_url_or_path" => $image_url_or_path,
+									"download" => $download
+								);
+
+								break;
 							
-							// import the specified image, then set the value of the field to the image ID in the media library
+							default:
+								// set the field data to the value of the field after it's been parsed
+								$data[$field_slug] = $parsedData[$field_slug][$index];
+								break;
+						}					
 
-							$image_url_or_path = $parsedData[$field_slug][$index];
+						// apply mapping rules if they exist
+						if (!empty($import_options['mapping'][$field_slug])) {
+							$mapping_rules = json_decode($import_options['mapping'][$field_slug], true);
 
-							$download = $import_options['download_image'][$field_slug];
-
-							$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true);
-
-							$data[$field_slug] = array(
-								"attachment_id" => $uploaded_image,
-								"image_url_or_path" => $image_url_or_path,
-								"download" => $download
-							);
-
-							break;
-
-						case 'file':
-
-							$image_url_or_path = $parsedData[$field_slug][$index];
-
-							$download = $import_options['download_image'][$field_slug];
-
-							$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files");
-
-							$data[$field_slug] = array(
-								"attachment_id" => $uploaded_file,
-								"image_url_or_path" => $image_url_or_path,
-								"download" => $download
-							);
-
-							break;
-						
-						default:
-							// set the field data to the value of the field after it's been parsed
-							$data[$field_slug] = $parsedData[$field_slug][$index];
-							break;
-					}					
-
-					// apply mapping rules if they exist
-					if (!empty($import_options['mapping'][$field_slug])) {
-						$mapping_rules = json_decode($import_options['mapping'][$field_slug], true);
-
-						if (!empty($mapping_rules) and is_array($mapping_rules)) {
-							foreach ($mapping_rules as $rule_number => $map_to) {
-								if (isset($map_to[trim($data[$field_slug])])){
-									$data[$field_slug] = trim($map_to[trim($data[$field_slug])]);
-									break;
+							if (!empty($mapping_rules) and is_array($mapping_rules)) {
+								foreach ($mapping_rules as $rule_number => $map_to) {
+									if (isset($map_to[trim($data[$field_slug])])){
+										$data[$field_slug] = trim($map_to[trim($data[$field_slug])]);
+										break;
+									}
 								}
 							}
 						}
+						// --------------------
 					}
-					// --------------------
-
-
-				}
+				}				
 
 				call_user_func($this->import_function, $post_id, $data, $importData['import'], $importData['articleData'], $importData['logger']);
 			}
