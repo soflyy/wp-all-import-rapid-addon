@@ -744,7 +744,9 @@ if (!class_exists('RapidAddon')) {
 
 			if (empty($text)) return;
 
-			return $this->add_field(sanitize_key($text) . time() . uniqid() . count($this->fields), $text, 'plain_text', null, "", $is_html);			
+			$count = is_array($this->fields) ? count($this->fields) : 0;
+
+			return $this->add_field(sanitize_key($text) . time() . uniqid() . $count, $text, 'plain_text', null, "", $is_html);
 
 		}			
 
