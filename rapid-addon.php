@@ -148,9 +148,10 @@ if (!class_exists('RapidAddon')) {
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
             add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
             add_filter('pmxi_custom_types', array($this, 'filter_post_types'), 10, 2);
-            add_filter('pmxi_custom_types', array( $this, 'sort_post_types' ), 10, 2);
+            add_filter('pmxi_custom_types', array($this, 'sort_post_types'), 10, 2);
+            add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 2 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
-            add_action('admin_init', array($this, 'admin_notice_ignore'));
+            add_action('admin_init', array($this, 'admin_notice_ignore'));	
 
 		}
 
@@ -1177,30 +1178,75 @@ if (!class_exists('RapidAddon')) {
             return $custom_types;
         }
 
-        public function post_order_priority( $all_posts ) {
-            if ( ! empty( $all_posts ) ) {
-                $this->add_option( 'filtered_post_types', $all_posts );
-            }
-        }
-
-        public function sort_post_types( $custom_types, $custom_type ) {
-            if ( $custom_type == 'all_types' ) {
+        public function sort_post_types( $post_types, $type ) {
+            if ( $type == 'all_types' ) {
                 $options = $this->options_array();
-                $option_key = 'filtered_post_types';
-
+                $option_key = 'post_type_move';
                 if ( array_key_exists( $option_key, $options ) ) {
-                    $filtered_posts = $options[ $option_key ];
-                    if ( is_array( $filtered_posts ) ) {
-                        foreach ( $custom_types as $key => $filtered_post ) {                                                        
-                            $order = ( array_key_exists( $key, $filtered_posts ) ) ? $filtered_posts[ $key ] : $custom_types[ $key ]->menu_position;
-                            $custom_types[ $key ]->menu_position = $order;                            
+                    $move_rules = maybe_unserialize( $options[ $option_key ] );
+                    $move_this = $move_rules['move_this'];
+                    $move_to = $move_rules['move_to'];
+                    $compare = $move_rules['compare'];
+
+                    if ( ! empty( $move_this ) && ! empty( $move_to ) ) {
+                        $all_posts = (array) $post_types;
+
+                        // Find the post that we're moving.
+                        $move_this = array_splice( $all_posts, array_search( $move_this, array_keys( $all_posts ) ), 1 );
+    
+                        // Find the compare element
+                        $offset = array_search( $compare, array_keys( $all_posts ) );
+                        if ( ! $offset ) {
+                            $offset = 0;
                         }
-                    }
+    
+                        // Sort and return the new posts array.
+    
+                        if ( $move_to < 0 && $compare != 'post' ) {
+                            $move_to = str_replace( "-", "", $move_to );
+                            $offset = $offset - $move_to;
+                        } elseif ( $move_to < 0 && $compare == 'post' ) {
+                            $offset = 0;
+                        } else {
+                            $offset = $offset + $move_to;
+                        }
+                        return array_merge( array_slice( $all_posts, 0, $offset ), $move_this, array_slice( $all_posts, $offset, NULL ) );
+                    }                    
                 }
             }
-            return $custom_types;
+            return $post_types;
+        }
+
+        public function move_post_type( $move_this = null, $move_to = null, $compare = 'post' ) {
+
+            $move_rules = array(
+                'move_this' => $move_this,
+                'move_to'   => $move_to,
+                'compare'   => $compare
+            );
+
+            $this->add_option( 'post_type_move', $move_rules );
+        }
+
+        public function set_post_type_image( $post_type = null, $image = null ) {
+            $post_type_image_rules = array(
+                'post_type' => $post_type,
+                'image'     => $image
+            );
+
+            $this->add_option( 'post_type_image', $post_type_image_rules );
+        }
+
+        public function post_type_image( $post_type, $image ) {
+            $options = $this->options_array();
+            $option_key = 'post_type_image';
+            if ( array_key_exists( $option_key, $options ) ) {
+                $post_type_image_rules = maybe_unserialize( $options[ $option_key ] );
+                if ( ! empty( $post_type_image_rules['post_type'] ) && $post_type == $post_type_image_rules['post_type'] && ! empty( $post_type_image_rules['image'] ) ) {
+                    return $post_type_image_rules['image'];
+                }
+            }
+            return $image;
         }
 	}	
-
 }
-
