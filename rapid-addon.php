@@ -1188,7 +1188,17 @@ if (!class_exists('RapidAddon')) {
                 foreach ( $move_rules as $rule ) {
                     $move_this  = $rule['move_this'];
                     $move_to    = $rule['move_to'];
-                    array_splice( $order, $move_to, 0, $move_this );
+                    if ( $move_to > count( $order ) ) {
+                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+                            unset( $order[ $rm_key ] );
+                        }
+                        array_push( $order, $move_this );                        
+                    } else {
+                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+                            unset( $order[ $rm_key ] );
+                        }
+                        array_splice( $order, $move_to, 0, $move_this );
+                    }
                 }
 
                 return $order;
