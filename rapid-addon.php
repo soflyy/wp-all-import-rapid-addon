@@ -149,7 +149,7 @@ if (!class_exists('RapidAddon')) {
             add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
             add_filter('pmxi_custom_types', array($this, 'filter_post_types'), 10, 2);
             add_filter('pmxi_post_list_order', array($this,'sort_post_types'), 10, 1);
-            add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 2 );
+            add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
             add_action('admin_init', array($this, 'admin_notice_ignore'));	
 
@@ -238,19 +238,23 @@ if (!class_exists('RapidAddon')) {
 
 		function options_array() {
 
-			$options_list = array();
+            $options_list = array();
+            
+            if ( ! empty( $this->fields ) ) {
 
-			foreach ($this->fields as $field_slug => $field_params) {
-				if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
-				$default_value = '';
-				if (!empty($field_params['enum_values'])){
-					foreach ($field_params['enum_values'] as $key => $value) {						
-						$default_value = $key;
-						break;
-					}
-				}
-				$options_list[$field_slug] = $default_value;
-			}			
+                foreach ($this->fields as $field_slug => $field_params) {
+                    if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
+                    $default_value = '';
+                    if (!empty($field_params['enum_values'])){
+                        foreach ($field_params['enum_values'] as $key => $value) {						
+                            $default_value = $key;
+                            break;
+                        }
+                    }
+                    $options_list[$field_slug] = $default_value;
+                }
+
+            }			
 
 			if ( ! empty($this->options) ){
 				foreach ($this->options as $slug => $value) {
@@ -1228,23 +1232,39 @@ if (!class_exists('RapidAddon')) {
         }
 
         public function set_post_type_image( $post_type = null, $image = null, $class = null ) {
-            $post_type_image_rules = array(
-                'post_type' => $post_type,
-                'image'     => $image,
-                'class'     => $class
-            );
+            $post_type_image_rules = array();
+
+            if ( ! is_array( $post_type ) ) {
+
+                $post_type_image_rules[ $post_type ] = array(
+                        'post_type' => $post_type,
+                        'image'     => $image,
+                        'class'     => $class
+                );
+
+            } else {
+
+                if ( count( $post_type ) == count( $image ) && count( $post_type ) == count( $class ) ) {
+
+                    foreach ( $post_type as $key => $post_name ) {
+                        $post_type_image_rules[ $post_name ] = array(
+                            'post_type' => $post_name,
+                            'image'     => $image[ $key ],
+                            'class'     => $class[ $key ]
+                        );
+                    }
+                }
+            }
 
             $this->add_option( 'post_type_image', $post_type_image_rules );
         }
 
-        public function post_type_image( $post_type, $image ) {
+        public function post_type_image( $array ) {
             $options = $this->options_array();
             $option_key = 'post_type_image';
             if ( array_key_exists( $option_key, $options ) ) {
                 $post_type_image_rules = maybe_unserialize( $options[ $option_key ] );
-                if ( ! empty( $post_type_image_rules['post_type'] ) && $post_type == $post_type_image_rules['post_type'] && ! empty( $post_type_image_rules['image'] ) ) {
-                    return $post_type_image_rules;
-                }
+                return $post_type_image_rules;
             }
             return $image;
         }
