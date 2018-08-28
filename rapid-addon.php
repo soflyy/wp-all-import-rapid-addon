@@ -1208,7 +1208,6 @@ if (!class_exists('RapidAddon')) {
         }
 
         public function move_post_type( $move_this = null, $move_to = null ) {
-
             $move_rules = array();
 
             if ( ! is_array( $move_this ) && ! is_array( $move_to ) ) {
