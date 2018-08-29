@@ -57,14 +57,13 @@ if (!class_exists('RapidAddon')) {
 		protected $isWizard = true;
 
 		function __construct($name, $slug) {
-
 			$this->name = $name;
 			$this->slug = $slug;
 			if (!empty($_GET['id'])){
 				$this->isWizard = false;
 			}
-		}
-
+        }
+        
 		function set_import_function($name) {
 			$this->import_function = $name;
 		}
@@ -151,7 +150,8 @@ if (!class_exists('RapidAddon')) {
             add_filter('pmxi_post_list_order', array($this,'sort_post_types'), 10, 1);
             add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
-            add_action('admin_init', array($this, 'admin_notice_ignore'));	
+            add_action('admin_init', array($this, 'admin_notice_ignore'));
+            add_action('admin_init', array($this, 'load_stylesheet'));	
 
 		}
 
@@ -1231,26 +1231,24 @@ if (!class_exists('RapidAddon')) {
             $this->add_option( 'post_type_move', $move_rules );
         }
 
-        public function set_post_type_image( $post_type = null, $image = null, $class = null ) {
+        public function set_post_type_image( $post_type = null, $image = null ) {
             $post_type_image_rules = array();
 
             if ( ! is_array( $post_type ) ) {
 
                 $post_type_image_rules[ $post_type ] = array(
                         'post_type' => $post_type,
-                        'image'     => $image,
-                        'class'     => $class
+                        'image'     => $image
                 );
 
             } else {
 
-                if ( count( $post_type ) == count( $image ) && count( $post_type ) == count( $class ) ) {
+                if ( count( $post_type ) == count( $image ) ) {
 
                     foreach ( $post_type as $key => $post_name ) {
                         $post_type_image_rules[ $post_name ] = array(
                             'post_type' => $post_name,
-                            'image'     => $image[ $key ],
-                            'class'     => $class[ $key ]
+                            'image'     => $image[ $key ]
                         );
                     }
                 }
