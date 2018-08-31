@@ -151,8 +151,7 @@ if (!class_exists('RapidAddon')) {
             add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
             add_action('admin_init', array($this, 'admin_notice_ignore'));
-
-		}
+        }        
 
 		function parse($data) {
 			
