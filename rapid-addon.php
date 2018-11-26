@@ -1255,7 +1255,7 @@ if (!class_exists('RapidAddon')) {
             $this->add_option( 'post_type_image', $post_type_image_rules );
         }
 
-        public function post_type_image( $array ) {
+        public function post_type_image( $image ) {
             $options = $this->options_array();
             $option_key = 'post_type_image';
             if ( array_key_exists( $option_key, $options ) ) {
