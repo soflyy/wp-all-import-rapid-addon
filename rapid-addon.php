@@ -57,14 +57,13 @@ if (!class_exists('RapidAddon')) {
 		protected $isWizard = true;
 
 		function __construct($name, $slug) {
-
 			$this->name = $name;
 			$this->slug = $slug;
 			if (!empty($_GET['id'])){
 				$this->isWizard = false;
 			}
-		}
-
+        }
+        
 		function set_import_function($name) {
 			$this->import_function = $name;
 		}
@@ -146,11 +145,13 @@ if (!class_exists('RapidAddon')) {
 			add_filter('wp_all_import_addon_import', array($this, 'wpai_api_import'));
 			add_filter('wp_all_import_addon_saved_post', array($this, 'wpai_api_post_saved'));
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
-			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
+            add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
+            add_filter('pmxi_custom_types', array($this, 'filter_post_types'), 10, 2);
+            add_filter('pmxi_post_list_order', array($this,'sort_post_types'), 10, 1);
+            add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
-			add_action('admin_init', array($this, 'admin_notice_ignore'));			
-
-		}
+            add_action('admin_init', array($this, 'admin_notice_ignore'));
+        }        
 
 		function parse($data) {
 			
@@ -235,19 +236,23 @@ if (!class_exists('RapidAddon')) {
 
 		function options_array() {
 
-			$options_list = array();
+            $options_list = array();
+            
+            if ( ! empty( $this->fields ) ) {
 
-			foreach ($this->fields as $field_slug => $field_params) {
-				if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
-				$default_value = '';
-				if (!empty($field_params['enum_values'])){
-					foreach ($field_params['enum_values'] as $key => $value) {						
-						$default_value = $key;
-						break;
-					}
-				}
-				$options_list[$field_slug] = $default_value;
-			}			
+                foreach ($this->fields as $field_slug => $field_params) {
+                    if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
+                    $default_value = '';
+                    if (!empty($field_params['enum_values'])){
+                        foreach ($field_params['enum_values'] as $key => $value) {						
+                            $default_value = $key;
+                            break;
+                        }
+                    }
+                    $options_list[$field_slug] = $default_value;
+                }
+
+            }			
 
 			if ( ! empty($this->options) ){
 				foreach ($this->options as $slug => $value) {
@@ -1143,8 +1148,121 @@ if (!class_exists('RapidAddon')) {
 
 			$m and $this->logger and call_user_func($this->logger, $m);
 
-		}
+        }
+        
+        public function remove_post_type( $type = '' ) {
+            if ( ! empty( $type ) ) {
+                $this->add_option( 'post_types_to_remove', $type );
+            }
+        }
+
+        public function filter_post_types( $custom_types = '', $custom_type = '' ) {
+            $options = $this->options_array();
+            $option_key = 'post_types_to_remove';
+
+            if ( array_key_exists( $option_key, $options ) ) {
+                $type = $options[ $option_key ];
+                
+                if ( ! empty( $type ) ) {
+                    if ( ! is_array( $type ) ) {
+                        if ( array_key_exists( $type, $custom_types )  ) {
+                            unset( $custom_types[ $type ] );
+                        }
+                    } else {
+                        foreach ( $type as $key => $post_type ) {
+                            if ( array_key_exists( $post_type, $custom_types ) ) {
+                                unset( $custom_types[ $post_type ] );
+                            }
+                        }
+                    }
+                }
+            }
+            return $custom_types;
+        }
+
+        public function sort_post_types( array $order ) {
+            $options = $this->options_array();
+            $option_key = 'post_type_move';
+
+            if ( array_key_exists( $option_key, $options ) ) {
+                $move_rules = maybe_unserialize( $options[ $option_key ] );
+
+                foreach ( $move_rules as $rule ) {
+                    $move_this  = $rule['move_this'];
+                    $move_to    = $rule['move_to'];
+                    if ( $move_to > count( $order ) ) {
+                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+                            unset( $order[ $rm_key ] );
+                        }
+                        array_push( $order, $move_this );                        
+                    } else {
+                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+                            unset( $order[ $rm_key ] );
+                        }
+                        array_splice( $order, $move_to, 0, $move_this );
+                    }
+                }
+
+                return $order;
+            }
+
+            return $order;
+        }
+
+        public function move_post_type( $move_this = null, $move_to = null ) {
+            $move_rules = array();
+
+            if ( ! is_array( $move_this ) && ! is_array( $move_to ) ) {
+                $move_rules[] = array(
+                    'move_this' => $move_this,
+                    'move_to'   => $move_to
+                );
+            } else {
+                foreach ( $move_this as $key => $move_post ) {                    
+                    $move_rules[] = array(
+                        'move_this' => $move_post,
+                        'move_to'   => $move_to[ $key ]
+                    );
+                }
+            }
+
+            $this->add_option( 'post_type_move', $move_rules );
+        }
+
+        public function set_post_type_image( $post_type = null, $image = null ) {
+            $post_type_image_rules = array();
+
+            if ( ! is_array( $post_type ) ) {
+
+                $post_type_image_rules[ $post_type ] = array(
+                        'post_type' => $post_type,
+                        'image'     => $image
+                );
+
+            } else {
+
+                if ( count( $post_type ) == count( $image ) ) {
+
+                    foreach ( $post_type as $key => $post_name ) {
+                        $post_type_image_rules[ $post_name ] = array(
+                            'post_type' => $post_name,
+                            'image'     => $image[ $key ]
+                        );
+                    }
+                }
+            }
+
+            $this->add_option( 'post_type_image', $post_type_image_rules );
+        }
+
+        public function post_type_image( $image ) {
+            $options = $this->options_array();
+            $option_key = 'post_type_image';
+            if ( array_key_exists( $option_key, $options ) ) {
+                $post_type_image_rules = maybe_unserialize( $options[ $option_key ] );
+                return $post_type_image_rules;
+            }
+            return $image;
+        }
 	}	
-
 }
-
