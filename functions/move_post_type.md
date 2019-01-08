@@ -1,7 +1,7 @@
 # move_post_type
 
 ```php
-$my_addon->move_post_type( $move_this [array/string - the posts to move], $move_to [array/string - position to move the post(s) to] );
+$my_addon->move_post_type( $move_this [array/string - the post types to move], $move_to [array/string - position to move the post type(s) to] );
 ```
 
 ## Description
@@ -12,11 +12,11 @@ Move one or more post types in the drop down list on Step 1 of an import.
 
 #### $move_this
 
-* Array or string of the post(s) to move.
+* Array or string of the post types(s) to move.
 
 #### $move_to
 
-* Array or string of the new position(s) for the post(s).
+* Array or string of the new position(s) for the post type(s).
 
 ## Usage
 
