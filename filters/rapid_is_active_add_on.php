@@ -11,7 +11,12 @@
  * @param $addon_slug - (string)		- the slug for the add-on.
  *
  */
- 
+
+add_filter('rapid_is_active_add_on', 'my_addon_rapid_is_active_add_on', 10, 3);
+function my_addon_rapid_is_active_add_on($is_addon_active, $post_type, $addon_slug){
+	return $is_addon_active;	
+}
+
 // Example: Show add-on section for a specific taxonomy
 
 add_filter('rapid_is_active_add_on', 'my_addon_rapid_is_active_add_on', 10, 3);
