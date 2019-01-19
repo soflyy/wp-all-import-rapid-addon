@@ -652,12 +652,17 @@ if (!class_exists('RapidAddon')) {
 							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
 							'field_name' => $this->slug."[".$sub_field['slug']."]",
 							'field_value' => $current_values[$this->slug][$sub_field['slug']],
-							'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+							'download_image' => null,
 							'field_key' => $sub_field['slug'],
 							'addon_prefix' => $this->slug,
 							'is_main_field' => $sub_field['is_main_field']
 						)
 					);
+
+					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
+					}
+
 				case 'file':
 					$field = array(
 						'type'   => 'file',
@@ -666,12 +671,17 @@ if (!class_exists('RapidAddon')) {
 							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
 							'field_name' => $this->slug."[".$sub_field['slug']."]",
 							'field_value' => $current_values[$this->slug][$sub_field['slug']],
-							'download_image' => $current_values[$this->slug]['download_image'][$sub_field['slug']],
+							'download_image' => null,
 							'field_key' => $sub_field['slug'],
 							'addon_prefix' => $this->slug,
 							'is_main_field' => $sub_field['is_main_field']
 						)
 					);
+
+					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
+					}
+
 					break;
 				case 'radio':
 					$field = array(
