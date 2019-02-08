@@ -346,7 +346,7 @@ if (!class_exists('RapidAddon')) {
 
 								$download = $import_options['download_image'][$field_slug];
 
-								$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true);
+								$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "images", true, $importData['articleData']);
 
 								$data[$field_slug] = array(
 									"attachment_id" => $uploaded_image,
@@ -362,7 +362,7 @@ if (!class_exists('RapidAddon')) {
 
 								$download = $import_options['download_image'][$field_slug];
 
-								$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files");
+								$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files", true, $importData['articleData']);
 
 								$data[$field_slug] = array(
 									"attachment_id" => $uploaded_file,
