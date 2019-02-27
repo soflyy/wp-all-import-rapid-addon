@@ -52,6 +52,7 @@ if (!class_exists('RapidAddon')) {
 			'auto_set_extension' => 0,
 			'new_extension' => '',
 			'do_not_remove_images' => 1,
+            'search_existing_images_logic' => 'by_url'
 		);
 
 		protected $isWizard = true;
