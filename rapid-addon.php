@@ -982,7 +982,7 @@ if (!class_exists('RapidAddon')) {
 					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {						
 						if ($import->options[$this->slug][$option_name] == "xpath") {
 							if ($import->options[$this->slug]['xpaths'][$option_name] == ""){
-								$count and $this->data[$option_name] = array_fill(0, $count, "");
+								$count and $data[$option_name] = array_fill(0, $count, "");
 							} else {
 								$data[$option_name] = XmlImportParser::factory($xml, $cxpath, (string) $import->options[$this->slug]['xpaths'][$option_name], $file)->parse();
 								$tmp_files[] = $file;						
