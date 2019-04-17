@@ -24,7 +24,6 @@ if ( ! class_exists( 'RapidAddon' ) ) {
 		public $logger = null;
 		public $when_to_run = false;
 		public $active_themes;
-		public $data = array();
 		public $active_plugins;
 		public $active_post_types;
 		public $image_options = array(
@@ -1021,7 +1020,7 @@ if ( ! class_exists( 'RapidAddon' ) ) {
 			$import = $parsingData['import'];
 			$count = $parsingData['count'];
 			$xml = $parsingData['xml'];
-			
+
 			$data = array(); // parsed data
 
 			if ( ! empty( $import->options[ $this->slug ] ) ) {
@@ -1036,7 +1035,7 @@ if ( ! class_exists( 'RapidAddon' ) ) {
 					if ( isset( $import->options[ $this->slug ][ $option_name ] ) and $import->options[ $this->slug ][ $option_name ] != '' ) {
 						if ( $import->options[ $this->slug ][ $option_name ] == "xpath" ) {
 							if ( $import->options[ $this->slug ][ 'xpaths' ][ $option_name ] == "" ) {
-								$count && $this->data[ $option_name ] = array_fill( 0, $count, "" );
+								$count && $data[ $option_name ] = array_fill( 0, $count, "" );
 							} else {
 								$data[ $option_name ] = XmlImportParser::factory( $xml, $cxpath, (string) $import->options[ $this->slug ][ 'xpaths' ][ $option_name ], $file )->parse();
 								$tmp_files[]          = $file;
