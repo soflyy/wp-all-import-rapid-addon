@@ -5,7 +5,7 @@
  * @package     WP All Import RapidAddon
  * @copyright   Copyright (c) 2014, Soflyy
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @version 	1.1.0
+ * @version 	1.1.1
  */
 
 if (!class_exists('RapidAddon')) {
@@ -663,7 +663,7 @@ if (!class_exists('RapidAddon')) {
 					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
 						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
 					}
-
+                    break;
 				case 'file':
 					$field = array(
 						'type'   => 'file',
