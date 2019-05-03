@@ -1167,7 +1167,7 @@ if (!class_exists('RapidAddon')) {
             }
         }
 
-        public function filter_post_types( $custom_types = '', $custom_type = '' ) {
+        public function filter_post_types( $custom_types = array(), $custom_type = '' ) {
             $options = $this->options_array();
             $option_key = 'post_types_to_remove';
 
