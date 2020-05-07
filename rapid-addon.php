@@ -883,8 +883,8 @@ if (!class_exists('RapidAddon')) {
 		* simply add an additional section for attachments
 		*
 		*/
-		function import_files( $slug, $title ){
-			$this->import_images( $slug, $title, 'files');
+		function import_files( $slug, $title, $callback = NULL ){
+			$this->import_images( $slug, $title, 'files', $callback);
 		}
 
 		/**
