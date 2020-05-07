@@ -892,7 +892,7 @@ if (!class_exists('RapidAddon')) {
 		* simply add an additional section 
 		*
 		*/
-		function import_images( $slug, $title, $type = 'images' ){
+		function import_images( $slug, $title, $type = 'images', $callback = NULL ){
 			
 			if ( empty($title) or empty($slug) ) return;
 
@@ -913,8 +913,14 @@ if (!class_exists('RapidAddon')) {
 			}
 
 			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
-			
-			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 4);
+
+			if ($callback && is_callable($callback)) {
+                add_action( $section_slug, $callback, 10, 4);
+            } else {
+                if (function_exists($slug)) {
+                    add_action( $section_slug, $slug, 10, 4);
+                }
+            }
 		}			
 			/**
 			*
