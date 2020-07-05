@@ -896,7 +896,11 @@ if (!class_exists('RapidAddon')) {
 			
 			if ( empty($title) or empty($slug) ) return;
 
-			$section_slug = 'pmxi_' . $slug; 
+			if (is_array($slug)) {
+                $section_slug = 'pmxi_' . md5(serialize($slug));
+            } else {
+                $section_slug = 'pmxi_' . $slug;
+            }
 
 			$this->image_sections[] = array(
 				'title' => $title,
@@ -914,7 +918,9 @@ if (!class_exists('RapidAddon')) {
 
 			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
 			
-			if (function_exists($slug)) add_action( $section_slug, $slug, 10, 4);
+			if (is_callable($slug)) {
+                add_action( $section_slug, $slug, 10, 4);
+            }
 		}			
 			/**
 			*
