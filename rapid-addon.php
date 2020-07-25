@@ -345,6 +345,10 @@ if (!class_exists('RapidAddon')) {
 
 								$image_url_or_path = $parsedData[$field_slug][$index];
 
+								if ( ! array_key_exists( $field_slug, $import_options['download_image'] ) ) {
+									continue 2;
+								}
+
 								$download = $import_options['download_image'][$field_slug];
 
 								$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "images", true, $importData['articleData']);
@@ -360,6 +364,10 @@ if (!class_exists('RapidAddon')) {
 							case 'file':
 
 								$image_url_or_path = $parsedData[$field_slug][$index];
+
+								if ( ! array_key_exists( $field_slug, $import_options['download_image'] ) ) {
+									continue 2;
+								}
 
 								$download = $import_options['download_image'][$field_slug];
 
@@ -660,7 +668,7 @@ if (!class_exists('RapidAddon')) {
 						)
 					);
 
-					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) && array_key_exists( $sub_field['slug'], $current_values[$this->slug]['download_image'] ) ) {
 						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
 					}
                     break;
@@ -679,7 +687,7 @@ if (!class_exists('RapidAddon')) {
 						)
 					);
 
-					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+					if ( array_key_exists( 'download_image', $current_values[$this->slug] )  && array_key_exists( $sub_field['slug'], $current_values[$this->slug]['download_image'] ) ) {
 						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
 					}
 
