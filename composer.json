@@ -3,5 +3,10 @@
     "description": "Rapid Add-On API for WP All Import",
     "type": "library",
     "license": "GPL 2.0",
-    "require": {}
+    "require": {},
+    "autoload": {
+		"files": [
+            "rapid-addon.php"
+        ]
+    }
 }
