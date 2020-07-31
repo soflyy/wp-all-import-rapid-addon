@@ -75,7 +75,7 @@ if (!class_exists('RapidAddon')) {
 
 		function is_active_addon($post_type = null) {
 			
-			if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+			if ( ! class_exists( 'PMXI_Plugin' ) ) {
 				return false;
 			}
 
