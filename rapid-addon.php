@@ -347,7 +347,7 @@ class RapidAddon {
 
 							$download = $import_options['download_image'][$field_slug];
 
-							$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "images", true, $importData['articleData']);
+							$uploaded_image = \PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "images", true, $importData['articleData']);
 
 							$data[$field_slug] = array(
 								"attachment_id" => $uploaded_image,
@@ -363,7 +363,7 @@ class RapidAddon {
 
 							$download = $import_options['download_image'][$field_slug];
 
-							$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files", true, $importData['articleData']);
+							$uploaded_file = \PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files", true, $importData['articleData']);
 
 							$data[$field_slug] = array(
 								"attachment_id" => $uploaded_file,
@@ -444,7 +444,7 @@ class RapidAddon {
 				if ( ! $is_images_section_enabled and ! $k ){
 					$section_options[$section['slug'] . 'is_featured'] = 1;
 				}
-				PMXI_API::add_additional_images_section($section['title'], $section['slug'], $current_values, '', true, false, $section['type']);
+				\PMXI_API::add_additional_images_section($section['title'], $section['slug'], $current_values, '', true, false, $section['type']);
 			}
 		}
 
@@ -458,7 +458,7 @@ class RapidAddon {
 
 		if ($field_params['type'] == 'text') {
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				'simple',
 				$field_params['name'],
 				array(
@@ -470,7 +470,7 @@ class RapidAddon {
 
 		} else if ($field_params['type'] == 'textarea') {
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				'textarea',
 				$field_params['name'],
 				array(
@@ -482,7 +482,7 @@ class RapidAddon {
 
 		} else if ($field_params['type'] == 'wp_editor') {
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				'wp_editor',
 				$field_params['name'],
 				array(
@@ -496,7 +496,7 @@ class RapidAddon {
 			
 			if (!isset($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				$field_params['type'],
 				$field_params['name'],
 				array(
@@ -515,7 +515,7 @@ class RapidAddon {
 			if (!isset($current_values[$this->slug]['mapping'][$field_slug])) { $current_values[$this->slug]['mapping'][$field_slug] = array(); }
 			if (!isset($current_values[$this->slug]['xpaths'][$field_slug])) { $current_values[$this->slug]['xpaths'][$field_slug] = ''; }
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				'enum',
 				$field_params['name'],
 				array(
@@ -534,7 +534,7 @@ class RapidAddon {
 
 		} else if($field_params['type'] == 'accordion') {
 
-			PMXI_API::add_field(
+			\PMXI_API::add_field(
 				'accordion',
 				$field_params['name'],
 				array(						
