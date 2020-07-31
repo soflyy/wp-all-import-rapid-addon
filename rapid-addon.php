@@ -8,6 +8,8 @@
  * @version 	1.1.1
  */
 
+namespace Soflyy;
+
 if (!class_exists('RapidAddon')) {
 	
 	class RapidAddon {
