@@ -1116,7 +1116,7 @@ if (!class_exists('RapidAddon')) {
 
 			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
-			if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+			if ( ! class_exists( 'PMXI_Plugin' ) ) {
 				$is_show_notice = true;
 			}
 
