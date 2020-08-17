@@ -896,7 +896,11 @@ if (!class_exists('RapidAddon')) {
 			
 			if ( empty($title) or empty($slug) ) return;
 
-			$section_slug = 'pmxi_' . $slug; 
+			if (is_array($slug)) {
+                $section_slug = 'pmxi_' . md5(serialize($slug));
+            } else {
+                $section_slug = 'pmxi_' . $slug;
+            }
 
 			$this->image_sections[] = array(
 				'title' => $title,
