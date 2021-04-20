@@ -73,11 +73,11 @@ if (!class_exists('RapidAddon')) {
 			$this->post_saved_function = $name;
 		}
 
-		function is_active_addon($post_type = null) {
-			
-			if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
-				return false;
-			}
+	function is_active_addon($post_type = null) {
+		
+		if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+			return false;
+		}
 
 			$addon_active = false;
 
@@ -345,7 +345,7 @@ if (!class_exists('RapidAddon')) {
 
 								$image_url_or_path = $parsedData[$field_slug][$index];
 
-								$download = $import_options['download_image'][$field_slug];
+							$download = $import_options['download_image'][$field_slug];
 
 								$uploaded_image = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "images", true, $importData['articleData']);
 
@@ -361,7 +361,7 @@ if (!class_exists('RapidAddon')) {
 
 								$image_url_or_path = $parsedData[$field_slug][$index];
 
-								$download = $import_options['download_image'][$field_slug];
+							$download = $import_options['download_image'][$field_slug];
 
 								$uploaded_file = PMXI_API::upload_image($post_id, $image_url_or_path, $download, $importData['logger'], true, "", "files", true, $importData['articleData']);
 
@@ -660,28 +660,28 @@ if (!class_exists('RapidAddon')) {
 						)
 					);
 
-					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
-						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
-					}
-                    break;
-				case 'file':
-					$field = array(
-						'type'   => 'file',
-						'label'  => $this->fields[$sub_field['slug']]['name'],
-						'params' => array(
-							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-							'field_name' => $this->slug."[".$sub_field['slug']."]",
-							'field_value' => $current_values[$this->slug][$sub_field['slug']],
-							'download_image' => null,
-							'field_key' => $sub_field['slug'],
-							'addon_prefix' => $this->slug,
-							'is_main_field' => $sub_field['is_main_field']
-						)
-					);
+				if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+					$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
+				}
+				break;
+			case 'file':
+				$field = array(
+					'type'   => 'file',
+					'label'  => $this->fields[$sub_field['slug']]['name'],
+					'params' => array(
+						'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
+						'field_name' => $this->slug."[".$sub_field['slug']."]",
+						'field_value' => $current_values[$this->slug][$sub_field['slug']],
+						'download_image' => null,
+						'field_key' => $sub_field['slug'],
+						'addon_prefix' => $this->slug,
+						'is_main_field' => $sub_field['is_main_field']
+					)
+				);
 
-					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
-						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
-					}
+				if ( array_key_exists( 'download_image', $current_values[$this->slug] ) ) {
+					$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
+				}
 
 					break;
 				case 'radio':
@@ -878,23 +878,23 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-		/**
-		*
-		* simply add an additional section for attachments
-		*
-		*/
-		function import_files( $slug, $title ){
-			$this->import_images( $slug, $title, 'files');
-		}
+	/**
+	*
+	* simply add an additional section for attachments
+	*
+	*/
+	function import_files( $slug, $title ){
+		$this->import_images( $slug, $title, 'files');
+	}
 
-		/**
-		*
-		* simply add an additional section 
-		*
-		*/
-		function import_images( $slug, $title, $type = 'images' ){
-			
-			if ( empty($title) or empty($slug) ) return;
+	/**
+	*
+	* simply add an additional section 
+	*
+	*/
+	function import_images( $slug, $title, $type = 'images' ){
+		
+		if ( empty($title) or empty($slug) ) return;
 
 			if (is_array($slug)) {
                 $section_slug = 'pmxi_' . md5(serialize($slug));
@@ -916,20 +916,20 @@ if (!class_exists('RapidAddon')) {
 				add_filter('wp_all_import_is_show_add_new_images', array($this, 'filter_is_show_add_new_images'), 10, 2);
 			}
 
-			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
-			
-			if (is_callable($slug)) {
-                add_action( $section_slug, $slug, 10, 4);
-            }
-		}			
-			/**
-			*
-			* filter to allow import images for free edition of WP All Import
-			*
-			*/
-			function is_allow_import_images($is_allow, $post_type){
-				return ($this->is_active_addon($post_type)) ? true : $is_allow;
-			}
+		add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
+		
+		if (is_callable($slug)) {
+			add_action( $section_slug, $slug, 10, 4);
+		}
+	}			
+		/**
+		*
+		* filter to allow import images for free edition of WP All Import
+		*
+		*/
+		function is_allow_import_images($is_allow, $post_type){
+			return ($this->is_active_addon($post_type)) ? true : $is_allow;
+		}
 
 		/**
 		*
@@ -1116,9 +1116,9 @@ if (!class_exists('RapidAddon')) {
 
 			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 
-			if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
-				$is_show_notice = true;
-			}
+		if ( ! is_plugin_active('wp-all-import-pro/wp-all-import-pro.php') and ! is_plugin_active('wp-all-import/plugin.php') ){
+			$is_show_notice = true;
+		}
 
 			// Supported Themes
 			if ( ! $is_show_notice and ! empty($conditions['themes']) ){
