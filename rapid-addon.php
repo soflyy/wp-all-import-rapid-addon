@@ -5,11 +5,11 @@
  * @package     WP All Import RapidAddon
  * @copyright   Copyright (c) 2014, Soflyy
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @version 	1.1.1
+ * @version 	1.1.2
  */
 
 if (!class_exists('RapidAddon')) {
-	
+
 	class RapidAddon {
 
 		public $name;
@@ -24,13 +24,13 @@ if (!class_exists('RapidAddon')) {
 		public $logger = null;
 		public $when_to_run = false;
 		public $image_options = array(
-			'download_images' => 'yes', 
-			'download_featured_delim' => ',', 
+			'download_images' => 'yes',
+			'download_featured_delim' => ',',
 			'download_featured_image' => '',
 			'gallery_featured_image' => '',
 			'gallery_featured_delim' => ',',
 			'featured_image' => '',
-			'featured_delim' => ',', 
+			'featured_delim' => ',',
 			'search_existing_images' => 1,
 			'is_featured' => 0,
 			'create_draft' => 'no',
@@ -52,8 +52,10 @@ if (!class_exists('RapidAddon')) {
 			'auto_set_extension' => 0,
 			'new_extension' => '',
 			'do_not_remove_images' => 1,
-            'search_existing_images_logic' => 'by_url'
+			'search_existing_images_logic' => 'by_url'
 		);
+
+        private $active_post_types,$active_themes,$active_plugins = [];
 
 		protected $isWizard = true;
 
@@ -63,8 +65,8 @@ if (!class_exists('RapidAddon')) {
 			if (!empty($_GET['id'])){
 				$this->isWizard = false;
 			}
-        }
-        
+		}
+
 		function set_import_function($name) {
 			$this->import_function = $name;
 		}
@@ -74,7 +76,7 @@ if (!class_exists('RapidAddon')) {
 		}
 
 		function is_active_addon($post_type = null) {
-			
+
 			if ( ! class_exists( 'PMXI_Plugin' ) ) {
 				return false;
 			}
@@ -85,16 +87,16 @@ if (!class_exists('RapidAddon')) {
 				if (@in_array($post_type, $this->active_post_types) or empty($this->active_post_types)) {
 					$addon_active = true;
 				}
-			}			
+			}
 
 			if ($addon_active){
-				
+
 				$current_theme = wp_get_theme();
 
-				$parent_theme = $current_theme->parent();				
+				$parent_theme = $current_theme->parent();
 
 				$theme_name = $current_theme->get('Name');
-				
+
 				$addon_active = (@in_array($theme_name, $this->active_themes) or empty($this->active_themes)) ? true : false;
 
 				if ( ! $addon_active and $parent_theme ){
@@ -102,7 +104,7 @@ if (!class_exists('RapidAddon')) {
 					$addon_active = (@in_array($parent_theme_name, $this->active_themes) or empty($this->active_themes)) ? true : false;
 
 				}
-				
+
 				if ( $addon_active and ! empty($this->active_plugins) ){
 
 					include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
@@ -112,7 +114,7 @@ if (!class_exists('RapidAddon')) {
 							$addon_active = false;
 							break;
 						}
-					}					
+					}
 				}
 
 			}
@@ -123,14 +125,14 @@ if (!class_exists('RapidAddon')) {
 
 			return apply_filters('rapid_is_active_add_on', $addon_active, $post_type, $this->slug);
 		}
-		
+
 		/**
-		* 
-		* Add-On Initialization
-		*
-		* @param array $conditions - list of supported themes and post types
-		*
-		*/
+		 *
+		 * Add-On Initialization
+		 *
+		 * @param array $conditions - list of supported themes and post types
+		 *
+		 */
 		function run($conditions = array()) {
 
 			if (empty($conditions)) {
@@ -139,23 +141,23 @@ if (!class_exists('RapidAddon')) {
 
 			@$this->active_post_types = ( ! empty($conditions['post_types'])) ? $conditions['post_types'] : array();
 			@$this->active_themes = ( ! empty($conditions['themes'])) ? $conditions['themes'] : array();
-			@$this->active_plugins = ( ! empty($conditions['plugins'])) ? $conditions['plugins'] : array();			
+			@$this->active_plugins = ( ! empty($conditions['plugins'])) ? $conditions['plugins'] : array();
 
 			add_filter('pmxi_addons', array($this, 'wpai_api_register'));
 			add_filter('wp_all_import_addon_parse', array($this, 'wpai_api_parse'));
 			add_filter('wp_all_import_addon_import', array($this, 'wpai_api_import'));
 			add_filter('wp_all_import_addon_saved_post', array($this, 'wpai_api_post_saved'));
 			add_filter('pmxi_options_options', array($this, 'wpai_api_options'));
-            add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
-            add_filter('pmxi_custom_types', array($this, 'filter_post_types'), 10, 2);
-            add_filter('pmxi_post_list_order', array($this,'sort_post_types'), 10, 1);
-            add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
+			add_filter('wp_all_import_image_sections', array($this, 'additional_sections'), 10, 1);
+			add_filter('pmxi_custom_types', array($this, 'filter_post_types'), 10, 2);
+			add_filter('pmxi_post_list_order', array($this,'sort_post_types'), 10, 1);
+			add_filter('wp_all_import_post_type_image', array($this, 'post_type_image'), 10, 1 );
 			add_action('pmxi_extend_options_featured',  array($this, 'wpai_api_metabox'), 10, 2);
-            add_action('admin_init', array($this, 'admin_notice_ignore'));
-        }        
+			add_action('admin_init', array($this, 'admin_notice_ignore'));
+		}
 
 		function parse($data) {
-			
+
 			if ( ! $this->is_active_addon($data['import']->options['custom_type'])) return false;
 
 			$parsedData = $this->helper_parse($data, $this->options_array());
@@ -180,9 +182,9 @@ if (!class_exists('RapidAddon')) {
 						}
 						else
 						{
-							foreach ($value as $n => $param) {							
+							foreach ($value as $n => $param) {
 								if (is_array($param) and ! empty($this->fields[$param['slug']])){
-									$this->fields[$param['slug']]['is_sub_field'] = true;								
+									$this->fields[$param['slug']]['is_sub_field'] = true;
 								}
 							}
 						}
@@ -224,36 +226,36 @@ if (!class_exists('RapidAddon')) {
 		}
 
 		/**
-		* 
-		* Add an option to WP All Import options list
-		*
-		* @param string $slug - option name
-		* @param string $default_value - default option value
-		*
-		*/
+		 *
+		 * Add an option to WP All Import options list
+		 *
+		 * @param string $slug - option name
+		 * @param string $default_value - default option value
+		 *
+		 */
 		function add_option($slug, $default_value = ''){
 			$this->options[$slug] = $default_value;
 		}
 
 		function options_array() {
 
-            $options_list = array();
-            
-            if ( ! empty( $this->fields ) ) {
+			$options_list = array();
 
-                foreach ($this->fields as $field_slug => $field_params) {
-                    if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
-                    $default_value = '';
-                    if (!empty($field_params['enum_values'])){
-                        foreach ($field_params['enum_values'] as $key => $value) {						
-                            $default_value = $key;
-                            break;
-                        }
-                    }
-                    $options_list[$field_slug] = $default_value;
-                }
+			if ( ! empty( $this->fields ) ) {
 
-            }			
+				foreach ($this->fields as $field_slug => $field_params) {
+					if (in_array($field_params['type'], array('title', 'plain_text', 'acf'))) continue;
+					$default_value = '';
+					if (!empty($field_params['enum_values'])){
+						foreach ($field_params['enum_values'] as $key => $value) {
+							$default_value = $key;
+							break;
+						}
+					}
+					$options_list[$field_slug] = $default_value;
+				}
+
+			}
 
 			if ( ! empty($this->options) ){
 				foreach ($this->options as $slug => $value) {
@@ -312,7 +314,7 @@ if (!class_exists('RapidAddon')) {
 
 			if (is_callable($this->post_saved_function))
 				call_user_func($this->post_saved_function, $importData['pid'], $importData['import'], $importData['logger']);
-			
+
 		}
 
 		function import($importData, $parsedData) {
@@ -322,10 +324,6 @@ if (!class_exists('RapidAddon')) {
 			}
 
 			$import_options = $importData['import']['options'][$this->slug];
-
-	//		echo "<pre>";
-	//		print_r($import_options);
-	//		echo "</pre>";
 
 			if ( ! empty($parsedData) )	{
 
@@ -340,7 +338,7 @@ if (!class_exists('RapidAddon')) {
 						switch ($field_params['type']) {
 
 							case 'image':
-								
+
 								// import the specified image, then set the value of the field to the image ID in the media library
 
 								$image_url_or_path = $parsedData[$field_slug][$index];
@@ -380,12 +378,12 @@ if (!class_exists('RapidAddon')) {
 								);
 
 								break;
-							
+
 							default:
 								// set the field data to the value of the field after it's been parsed
 								$data[$field_slug] = $parsedData[$field_slug][$index];
 								break;
-						}					
+						}
 
 						// apply mapping rules if they exist
 						if (!empty($import_options['mapping'][$field_slug])) {
@@ -402,7 +400,7 @@ if (!class_exists('RapidAddon')) {
 						}
 						// --------------------
 					}
-				}				
+				}
 
 				call_user_func($this->import_function, $post_id, $data, $importData['import'], $importData['articleData'], $importData['logger']);
 			}
@@ -416,6 +414,7 @@ if (!class_exists('RapidAddon')) {
 				return;
 			}
 
+			// Escaping is handled in 'helper_metabox_top' method.
 			echo $this->helper_metabox_top($this->name);
 
 			$visible_fields = 0;
@@ -427,28 +426,27 @@ if (!class_exists('RapidAddon')) {
 
 			$counter = 0;
 
-			foreach ($this->fields as $field_slug => $field_params) {				
+			foreach ($this->fields as $field_slug => $field_params) {
 
 				// do not render sub fields
-				if ($field_params['is_sub_field']) continue;		
+				if ($field_params['is_sub_field']) continue;
 
-				$counter++;		
+				$counter++;
 
-				$this->render_field($field_params, $field_slug, $current_values, $visible_fields == $counter);										
-
-				//if ( $field_params['type'] != 'accordion' ) echo "<br />";				
+				$this->render_field($field_params, $field_slug, $current_values, $visible_fields == $counter);
 
 			}
 
+			// Static HTML is returned by method for display.
 			echo $this->helper_metabox_bottom();
 
-			if ( ! empty($this->image_sections) ){				
-				$is_images_section_enabled = apply_filters('wp_all_import_is_images_section_enabled', true, $post_type);						
+			if ( ! empty($this->image_sections) ){
+				$is_images_section_enabled = apply_filters('wp_all_import_is_images_section_enabled', true, $post_type);
 				foreach ($this->image_sections as $k => $section) {
 					$section_options = array();
 					foreach ($this->image_options as $slug => $value) {
 						$section_options[$section['slug'] . $slug] = $value;
-					}										
+					}
 					if ( ! $is_images_section_enabled and ! $k ){
 						$section_options[$section['slug'] . 'is_featured'] = 1;
 					}
@@ -456,7 +454,7 @@ if (!class_exists('RapidAddon')) {
 				}
 			}
 
-		}		
+		}
 
 		function render_field($field_params, $field_slug, $current_values, $in_the_bottom = false){
 
@@ -501,7 +499,7 @@ if (!class_exists('RapidAddon')) {
 				);
 
 			} else if ($field_params['type'] == 'image' or $field_params['type'] == 'file') {
-				
+
 				if (!isset($current_values[$this->slug]['download_image'][$field_slug])) { $current_values[$this->slug]['download_image'][$field_slug] = ''; }
 
 				PMXI_API::add_field(
@@ -518,8 +516,8 @@ if (!class_exists('RapidAddon')) {
 					)
 				);
 
-			} else if ($field_params['type'] == 'radio') {					
-				
+			} else if ($field_params['type'] == 'radio') {
+
 				if (!isset($current_values[$this->slug]['mapping'][$field_slug])) { $current_values[$this->slug]['mapping'][$field_slug] = array(); }
 				if (!isset($current_values[$this->slug]['xpaths'][$field_slug])) { $current_values[$this->slug]['xpaths'][$field_slug] = ''; }
 
@@ -545,13 +543,13 @@ if (!class_exists('RapidAddon')) {
 				PMXI_API::add_field(
 					'accordion',
 					$field_params['name'],
-					array(						
+					array(
 						'tooltip' => $field_params['tooltip'],
-						'field_name' => $this->slug."[".$field_slug."]",																
-						'field_key' => $field_slug,								
+						'field_name' => $this->slug."[".$field_slug."]",
+						'field_key' => $field_slug,
 						'addon_prefix' => $this->slug,
 						'sub_fields' => $this->get_sub_fields($field_params, $field_slug, $current_values),
-						'in_the_bottom' => $in_the_bottom						
+						'in_the_bottom' => $in_the_bottom
 					)
 				);
 
@@ -562,54 +560,55 @@ if (!class_exists('RapidAddon')) {
 				$fieldData['label'] = $field_params['field_obj']->post_title;
 				$fieldData['key']   = $field_params['field_obj']->post_name;
 				if (empty($fieldData['name'])) $fieldData['name'] = $field_params['field_obj']->post_excerpt;
+				// This function is no longer used in recent versions of the ACF Import Add-On.
 				if (function_exists('pmai_render_field')) {
-					echo pmai_render_field($fieldData, ( ! empty($current_values) ) ? $current_values : array() );
+					echo \wp_kses_post(pmai_render_field($fieldData, ( ! empty($current_values) ) ? $current_values : array() ));
 				}
 			} else if($field_params['type'] == 'title'){
 				?>
-				<h4 class="wpallimport-add-on-options-title"><?php _e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])): ?><a href="#help" class="wpallimport-help" title="<?php echo $field_params['tooltip']; ?>" style="position:relative; top: -1px;">?</a><?php endif; ?></h4>				
+                <h4 class="wpallimport-add-on-options-title"><?php \esc_html_e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])): ?><a href="#help" class="wpallimport-help" title="<?php echo \wp_kses_post($field_params['tooltip']); ?>" style="position:relative; top: -1px;">?</a><?php endif; ?></h4>
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
-				if ($field_params['is_html']):					
-					echo $field_params['name'];				
+				if ($field_params['is_html']):
+					echo \wp_kses_post($field_params['name']);
 				else:
 					?>
-					<p style="margin: 0 0 12px 0;"><?php echo $field_params['name'];?></p>
-					<?php
+                    <p style="margin: 0 0 12px 0;"><?php \esc_html_e($field_params['name']);?></p>
+				<?php
 				endif;
 			}
 
 
 		}
 		/**
-		*
-		* Helper function for nested radio fields
-		*
-		*/
+		 *
+		 * Helper function for nested radio fields
+		 *
+		 */
 		function get_sub_fields($field_params, $field_slug, $current_values){
-			$sub_fields = array();	
-			if ( ! empty($field_params['enum_values']) ){										
-				foreach ($field_params['enum_values'] as $key => $value) {					
-					$sub_fields[$key] = array();	
+			$sub_fields = array();
+			if ( ! empty($field_params['enum_values']) ){
+				foreach ($field_params['enum_values'] as $key => $value) {
+					$sub_fields[$key] = array();
 					if (is_array($value)){
-						if ($field_params['type'] == 'accordion'){								
+						if ($field_params['type'] == 'accordion'){
 							$sub_fields[$key][] = $this->convert_field($value, $current_values);
 						}
 						else
 						{
-							foreach ($value as $k => $sub_field) {								
+							foreach ($value as $k => $sub_field) {
 								if (is_array($sub_field) and ! empty($this->fields[$sub_field['slug']]))
-								{									
+								{
 									$sub_fields[$key][] = $this->convert_field($sub_field, $current_values);
-								}								
+								}
 							}
 						}
 					}
 				}
 			}
 			return $sub_fields;
-		}			
+		}
 
 		function convert_field($sub_field, $current_values){
 			$field = array();
@@ -671,7 +670,7 @@ if (!class_exists('RapidAddon')) {
 					if ( array_key_exists( 'download_image', $current_values[$this->slug] ) && array_key_exists( $sub_field['slug'], $current_values[$this->slug]['download_image'] ) ) {
 						$field['params']['download_image'] = $current_values[$this->slug]['download_image'][$sub_field['slug']];
 					}
-                    break;
+					break;
 				case 'file':
 					$field = array(
 						'type'   => 'file',
@@ -717,32 +716,32 @@ if (!class_exists('RapidAddon')) {
 						'label'  => $this->fields[$sub_field['slug']]['name'],
 						'params' => array(
 							'tooltip' => $this->fields[$sub_field['slug']]['tooltip'],
-							'field_name' => $this->slug."[".$sub_field['slug']."]",																
-							'field_key' => $sub_field['slug'],								
+							'field_name' => $this->slug."[".$sub_field['slug']."]",
+							'field_key' => $sub_field['slug'],
 							'addon_prefix' => $this->slug,
 							'sub_fields' => $this->get_sub_fields($this->fields[$sub_field['slug']], $sub_field['slug'], $current_values),
 							'in_the_bottom' => false
 						)
-					);						
+					);
 					break;
 				default:
 					# code...
 					break;
 			}
 			return $field;
-		}				
+		}
 
 		/**
-		* 
-		* Add accordion options
-		*
-		*
-		*/
+		 *
+		 * Add accordion options
+		 *
+		 *
+		 */
 		function add_options( $main_field = false, $title = '', $fields = array() ){
-			
+
 			if ( ! empty($fields) )
-			{				
-				
+			{
+
 				if ($main_field){
 
 					$main_field['is_main_field'] = true;
@@ -750,19 +749,19 @@ if (!class_exists('RapidAddon')) {
 
 				}
 
-				return $this->add_field('accordion_' . $fields[0]['slug'], $title, 'accordion', $fields);							
-			
+				return $this->add_field('accordion_' . $fields[0]['slug'], $title, 'accordion', $fields);
+
 			}
 
-		}			
+		}
 
 		function add_title($title = '', $tooltip = ''){
 
 			if (empty($title)) return;
 
-			return $this->add_field(sanitize_key($title) . time(), $title, 'title', null, $tooltip);			
+			return $this->add_field(sanitize_key($title) . time(), $title, 'title', null, $tooltip);
 
-		}		
+		}
 
 		function add_text($text = '', $is_html = false){
 
@@ -772,7 +771,7 @@ if (!class_exists('RapidAddon')) {
 
 			return $this->add_field(sanitize_key($text) . time() . uniqid() . $count, $text, 'plain_text', null, "", $is_html);
 
-		}			
+		}
 
 		function helper_metabox_top($name) {
 
@@ -862,10 +861,10 @@ if (!class_exists('RapidAddon')) {
   					margin: 45px 0 15px 0;
 				}
 			</style>
-			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.$this->slug.' closed">
+			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.\esc_attr($this->slug).' closed">
 				<div class="wpallimport-content-section">
 					<div class="wpallimport-collapsed-header">
-						<h3>'.__($name,'pmxi_plugin').'</h3>	
+						<h3>'.\esc_html__($name,'pmxi_plugin').'</h3>	
 					</div>
 					<div class="wpallimport-collapsed-content" style="padding: 0;">
 						<div class="wpallimport-collapsed-content-inner">
@@ -887,35 +886,35 @@ if (!class_exists('RapidAddon')) {
 		}
 
 		/**
-		*
-		* simply add an additional section for attachments
-		*
-		*/
+		 *
+		 * simply add an additional section for attachments
+		 *
+		 */
 		function import_files( $slug, $title, $callback = NULL ){
 			$this->import_images( $slug, $title, 'files', $callback);
 		}
 
 		/**
-		*
-		* simply add an additional section 
-		*
-		*/
+		 *
+		 * simply add an additional section
+		 *
+		 */
 		function import_images( $slug, $title, $type = 'images', $callback = NULL ){
-			
+
 			if ( empty($title) or empty($slug) ) return;
 
 			if (is_array($slug)) {
-                $section_slug = 'pmxi_' . md5(serialize($slug));
-            } else {
-                $section_slug = 'pmxi_' . $slug;
-            }
+				$section_slug = 'pmxi_' . md5(serialize($slug));
+			} else {
+				$section_slug = 'pmxi_' . $slug;
+			}
 
 			$this->image_sections[] = array(
 				'title' => $title,
 				'slug'  => $section_slug,
 				'type'  => $type
-			);			
-			
+			);
+
 			foreach ($this->image_options as $option_slug => $value) {
 				$this->add_option($section_slug . $option_slug, $value);
 			}
@@ -924,63 +923,63 @@ if (!class_exists('RapidAddon')) {
 				add_filter('wp_all_import_is_show_add_new_images', array($this, 'filter_is_show_add_new_images'), 10, 2);
 			}
 
-			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);			
+			add_filter('wp_all_import_is_allow_import_images', array($this, 'is_allow_import_images'), 10, 2);
 
 			if ($callback && is_callable($callback)) {
-                add_action( $section_slug, $callback, 10, 4);
-            } else {
-                if (function_exists($slug)) {
-                    add_action( $section_slug, $slug, 10, 4);
-                }
-            }
-		}			
-			/**
-			*
-			* filter to allow import images for free edition of WP All Import
-			*
-			*/
-			function is_allow_import_images($is_allow, $post_type){
-				return ($this->is_active_addon($post_type)) ? true : $is_allow;
+				add_action( $section_slug, $callback, 10, 4);
+			} else {
+				if (function_exists($slug)) {
+					add_action( $section_slug, $slug, 10, 4);
+				}
 			}
+		}
+		/**
+		 *
+		 * filter to allow import images for free edition of WP All Import
+		 *
+		 */
+		function is_allow_import_images($is_allow, $post_type){
+			return ($this->is_active_addon($post_type)) ? true : $is_allow;
+		}
 
 		/**
-		*
-		* filter to control additional images sections
-		*
-		*/
+		 *
+		 * filter to control additional images sections
+		 *
+		 */
 		function additional_sections($sections){
 			if ( ! empty($this->image_sections) ){
 				foreach ($this->image_sections as $add_section) {
 					$sections[] = $add_section;
 				}
 			}
-			
+
 			return $sections;
 		}
-			/**
-			*
-			* remove the 'Don't touch existing images, append new images' when more than one image section is in use.
-			*
-			*/
-			function filter_is_show_add_new_images($is_show, $post_type){
-				return ($this->is_active_addon($post_type)) ? false : $is_show;
-			}
+		/**
+		 *
+		 * remove the 'Don't touch existing images, append new images' when more than one image section is in use.
+		 *
+		 */
+		function filter_is_show_add_new_images($is_show, $post_type){
+			return ($this->is_active_addon($post_type)) ? false : $is_show;
+		}
 
 		/**
-		*
-		* disable the default images section
-		*
-		*/		
+		 *
+		 * disable the default images section
+		 *
+		 */
 		function disable_default_images($post_type = false){
-									
+
 			add_filter('wp_all_import_is_images_section_enabled', array($this, 'is_enable_default_images_section'), 10, 2);
 
 		}
-			function is_enable_default_images_section($is_enabled, $post_type){						
-				
-				return ($this->is_active_addon($post_type)) ? false : true;
-								
-			}
+		function is_enable_default_images_section($is_enabled, $post_type){
+
+			return ($this->is_active_addon($post_type)) ? false : true;
+
+		}
 
 		function helper_parse($parsingData, $options) {
 
@@ -996,17 +995,17 @@ if (!class_exists('RapidAddon')) {
 
 				$tmp_files = array();
 
-				foreach ($options[$this->slug] as $option_name => $option_value) {					
-					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {						
+				foreach ($options[$this->slug] as $option_name => $option_value) {
+					if ( isset($import->options[$this->slug][$option_name]) and $import->options[$this->slug][$option_name] != '') {
 						if ($import->options[$this->slug][$option_name] == "xpath") {
 							if ($import->options[$this->slug]['xpaths'][$option_name] == ""){
 								$count and $data[$option_name] = array_fill(0, $count, "");
 							} else {
 								$data[$option_name] = XmlImportParser::factory($xml, $cxpath, (string) $import->options[$this->slug]['xpaths'][$option_name], $file)->parse();
-								$tmp_files[] = $file;						
+								$tmp_files[] = $file;
 							}
-						} 
-						else {							
+						}
+						else {
 							$data[$option_name] = XmlImportParser::factory($xml, $cxpath, (string) $import->options[$this->slug][$option_name], $file)->parse();
 							$tmp_files[] = $file;
 						}
@@ -1030,15 +1029,11 @@ if (!class_exists('RapidAddon')) {
 
 		function can_update_meta($meta_key, $import_options) {
 
-			//echo "<pre>";
-			//print_r($import_options['options']);
-			//echo "</pre>";
-			
 			$import_options = $import_options['options'];
 
 			if ($import_options['update_all_data'] == 'yes') return true;
 
-			if ( ! $import_options['is_update_custom_fields'] ) return false;			
+			if ( ! $import_options['is_update_custom_fields'] ) return false;
 
 			if ($import_options['update_custom_fields_logic'] == "full_update") return true;
 			if ($import_options['update_custom_fields_logic'] == "only" and ! empty($import_options['custom_fields_list']) and is_array($import_options['custom_fields_list']) and in_array($meta_key, $import_options['custom_fields_list']) ) return true;
@@ -1050,15 +1045,11 @@ if (!class_exists('RapidAddon')) {
 
 		function can_update_taxonomy($tax_name, $import_options) {
 
-			//echo "<pre>";
-			//print_r($import_options['options']);
-			//echo "</pre>";
-			
 			$import_options = $import_options['options'];
 
 			if ($import_options['update_all_data'] == 'yes') return true;
 
-			if ( ! $import_options['is_update_categories'] ) return false;			
+			if ( ! $import_options['is_update_categories'] ) return false;
 
 			if ($import_options['update_categories_logic'] == "full_update") return true;
 			if ($import_options['update_categories_logic'] == "only" and ! empty($import_options['taxonomies_list']) and is_array($import_options['taxonomies_list']) and in_array($tax_name, $import_options['taxonomies_list']) ) return true;
@@ -1074,9 +1065,9 @@ if (!class_exists('RapidAddon')) {
 
 			if ($import_options['update_all_data'] == 'yes') return true;
 
-			if (!$import_options['is_update_images']) return false;			
+			if (!$import_options['is_update_images']) return false;
 
-			if ($import_options['is_update_images']) return true;			
+			if ($import_options['is_update_images']) return true;
 
 			return false;
 		}
@@ -1084,7 +1075,7 @@ if (!class_exists('RapidAddon')) {
 
 		function admin_notice_ignore() {
 			if (isset($_GET[$this->slug.'_ignore']) && '0' == $_GET[$this->slug.'_ignore'] ) {
-				update_option($this->slug.'_ignore', 'true');
+				update_option(\sanitize_key($this->slug).'_notice_ignore', 'true');
 			}
 		}
 
@@ -1101,15 +1092,15 @@ if (!class_exists('RapidAddon')) {
 
 				?>
 
-	    		<div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php echo sanitize_key($this->slug); ?>">
-	    		    <p><?php _e(
-		    		    	sprintf(
-	    			    		$notice_text,
-	    			    		'?'.$this->slug.'_ignore=0'
-	    			    	), 
-	    		    		'rapid_addon_'.$this->slug
-	    		    	); ?></p>
-			    </div>
+                <div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php /* sanitize_key is used as it only allows alphanumeric, underscore, and dash while ensuring the value matches our later checks. */ echo sanitize_key($this->slug); ?>">
+                    <p><?php echo \wp_kses_post(\__(
+							sprintf(
+								$notice_text,
+								'?'.$this->slug.'_ignore=0'
+							),
+							'rapid_addon_'.$this->slug
+						)); ?></p>
+                </div>
 
 				<?php
 
@@ -1119,7 +1110,7 @@ if (!class_exists('RapidAddon')) {
 
 		/*
 		*
-		* $conditions - array('themes' => array('Realia'), 'plugins' => array('plugin-directory/plugin-file.php', 'plugin-directory2/plugin-file.php')) 
+		* $conditions - array('themes' => array('Realia'), 'plugins' => array('plugin-directory/plugin-file.php', 'plugin-directory2/plugin-file.php'))
 		*
 		*/
 		function admin_notice($notice_text = '', $conditions = array()) {
@@ -1136,28 +1127,28 @@ if (!class_exists('RapidAddon')) {
 			if ( ! $is_show_notice and ! empty($conditions['themes']) ){
 
 				$themeInfo    = wp_get_theme();
-				$parentInfo = $themeInfo->parent();				
+				$parentInfo = $themeInfo->parent();
 				$currentTheme = $themeInfo->get('Name');
-				
-				$is_show_notice = in_array($currentTheme, $conditions['themes']) ? false : true;				
+
+				$is_show_notice = in_array($currentTheme, $conditions['themes']) ? false : true;
 
 				if ( $is_show_notice and $parentInfo ){
 					$parent_theme = $parentInfo->get('Name');
-					$is_show_notice = in_array($parent_theme, $conditions['themes']) ? false : true;					
+					$is_show_notice = in_array($parent_theme, $conditions['themes']) ? false : true;
 				}
 
-			}			
+			}
 
 			// Required Plugins
-			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){				
+			if ( ! $is_show_notice and ! empty($conditions['plugins']) ){
 
 				$requires_counter = 0;
 				foreach ($conditions['plugins'] as $plugin) {
 					if ( is_plugin_active($plugin) ) $requires_counter++;
 				}
 
-				if ($requires_counter != count($conditions['plugins'])){ 					
-					$is_show_notice = true;			
+				if ($requires_counter != count($conditions['plugins'])){
+					$is_show_notice = true;
 				}
 
 			}
@@ -1173,125 +1164,125 @@ if (!class_exists('RapidAddon')) {
 
 		}
 
-		function log( $m = false){		
+		function log( $m = false){
 
 			$m and $this->logger and call_user_func($this->logger, $m);
 
-        }
-        
-        public function remove_post_type( $type = '' ) {
-            if ( ! empty( $type ) ) {
-                $this->add_option( 'post_types_to_remove', $type );
-            }
-        }
+		}
 
-        public function filter_post_types( $custom_types = array(), $custom_type = '' ) {
-            $options = $this->options_array();
-            $option_key = 'post_types_to_remove';
+		public function remove_post_type( $type = '' ) {
+			if ( ! empty( $type ) ) {
+				$this->add_option( 'post_types_to_remove', $type );
+			}
+		}
 
-            if ( array_key_exists( $option_key, $options ) ) {
-                $type = $options[ $option_key ];
-                
-                if ( ! empty( $type ) ) {
-                    if ( ! is_array( $type ) ) {
-                        if ( array_key_exists( $type, $custom_types )  ) {
-                            unset( $custom_types[ $type ] );
-                        }
-                    } else {
-                        foreach ( $type as $key => $post_type ) {
-                            if ( array_key_exists( $post_type, $custom_types ) ) {
-                                unset( $custom_types[ $post_type ] );
-                            }
-                        }
-                    }
-                }
-            }
-            return $custom_types;
-        }
+		public function filter_post_types( $custom_types = array(), $custom_type = '' ) {
+			$options = $this->options_array();
+			$option_key = 'post_types_to_remove';
 
-        public function sort_post_types( array $order ) {
-            $options = $this->options_array();
-            $option_key = 'post_type_move';
+			if ( array_key_exists( $option_key, $options ) ) {
+				$type = $options[ $option_key ];
 
-            if ( array_key_exists( $option_key, $options ) ) {
-                $move_rules = maybe_unserialize( $options[ $option_key ] );
+				if ( ! empty( $type ) ) {
+					if ( ! is_array( $type ) ) {
+						if ( array_key_exists( $type, $custom_types )  ) {
+							unset( $custom_types[ $type ] );
+						}
+					} else {
+						foreach ( $type as $key => $post_type ) {
+							if ( array_key_exists( $post_type, $custom_types ) ) {
+								unset( $custom_types[ $post_type ] );
+							}
+						}
+					}
+				}
+			}
+			return $custom_types;
+		}
 
-                foreach ( $move_rules as $rule ) {
-                    $move_this  = $rule['move_this'];
-                    $move_to    = $rule['move_to'];
-                    if ( $move_to > count( $order ) ) {
-                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
-                            unset( $order[ $rm_key ] );
-                        }
-                        array_push( $order, $move_this );                        
-                    } else {
-                        if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
-                            unset( $order[ $rm_key ] );
-                        }
-                        array_splice( $order, $move_to, 0, $move_this );
-                    }
-                }
+		public function sort_post_types( array $order ) {
+			$options = $this->options_array();
+			$option_key = 'post_type_move';
 
-                return $order;
-            }
+			if ( array_key_exists( $option_key, $options ) ) {
+				$move_rules = maybe_unserialize( $options[ $option_key ] );
 
-            return $order;
-        }
+				foreach ( $move_rules as $rule ) {
+					$move_this  = $rule['move_this'];
+					$move_to    = $rule['move_to'];
+					if ( $move_to > count( $order ) ) {
+						if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+							unset( $order[ $rm_key ] );
+						}
+						array_push( $order, $move_this );
+					} else {
+						if ( ( $rm_key = array_search( $move_this, $order ) ) !== false ) {
+							unset( $order[ $rm_key ] );
+						}
+						array_splice( $order, $move_to, 0, $move_this );
+					}
+				}
 
-        public function move_post_type( $move_this = null, $move_to = null ) {
-            $move_rules = array();
+				return $order;
+			}
 
-            if ( ! is_array( $move_this ) && ! is_array( $move_to ) ) {
-                $move_rules[] = array(
-                    'move_this' => $move_this,
-                    'move_to'   => $move_to
-                );
-            } else {
-                foreach ( $move_this as $key => $move_post ) {                    
-                    $move_rules[] = array(
-                        'move_this' => $move_post,
-                        'move_to'   => $move_to[ $key ]
-                    );
-                }
-            }
+			return $order;
+		}
 
-            $this->add_option( 'post_type_move', $move_rules );
-        }
+		public function move_post_type( $move_this = null, $move_to = null ) {
+			$move_rules = array();
 
-        public function set_post_type_image( $post_type = null, $image = null ) {
-            $post_type_image_rules = array();
+			if ( ! is_array( $move_this ) && ! is_array( $move_to ) ) {
+				$move_rules[] = array(
+					'move_this' => $move_this,
+					'move_to'   => $move_to
+				);
+			} else {
+				foreach ( $move_this as $key => $move_post ) {
+					$move_rules[] = array(
+						'move_this' => $move_post,
+						'move_to'   => $move_to[ $key ]
+					);
+				}
+			}
 
-            if ( ! is_array( $post_type ) ) {
+			$this->add_option( 'post_type_move', $move_rules );
+		}
 
-                $post_type_image_rules[ $post_type ] = array(
-                        'post_type' => $post_type,
-                        'image'     => $image
-                );
+		public function set_post_type_image( $post_type = null, $image = null ) {
+			$post_type_image_rules = array();
 
-            } else {
+			if ( ! is_array( $post_type ) ) {
 
-                if ( count( $post_type ) == count( $image ) ) {
+				$post_type_image_rules[ $post_type ] = array(
+					'post_type' => $post_type,
+					'image'     => $image
+				);
 
-                    foreach ( $post_type as $key => $post_name ) {
-                        $post_type_image_rules[ $post_name ] = array(
-                            'post_type' => $post_name,
-                            'image'     => $image[ $key ]
-                        );
-                    }
-                }
-            }
+			} else {
 
-            $this->add_option( 'post_type_image', $post_type_image_rules );
-        }
+				if ( count( $post_type ) == count( $image ) ) {
 
-        public function post_type_image( $image ) {
-            $options = $this->options_array();
-            $option_key = 'post_type_image';
-            if ( array_key_exists( $option_key, $options ) ) {
-                $post_type_image_rules = maybe_unserialize( $options[ $option_key ] );
-                return $post_type_image_rules;
-            }
-            return $image;
-        }
-	}	
+					foreach ( $post_type as $key => $post_name ) {
+						$post_type_image_rules[ $post_name ] = array(
+							'post_type' => $post_name,
+							'image'     => $image[ $key ]
+						);
+					}
+				}
+			}
+
+			$this->add_option( 'post_type_image', $post_type_image_rules );
+		}
+
+		public function post_type_image( $image ) {
+			$options = $this->options_array();
+			$option_key = 'post_type_image';
+			if ( array_key_exists( $option_key, $options ) ) {
+				$post_type_image_rules = maybe_unserialize( $options[ $option_key ] );
+				return $post_type_image_rules;
+			}
+			return $image;
+		}
+	}
 }
