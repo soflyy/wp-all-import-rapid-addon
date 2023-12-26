@@ -5,7 +5,7 @@
  * @package     WP All Import RapidAddon
  * @copyright   Copyright (c) 2014, Soflyy
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @version 	1.1.2
+ * @version 	1.1.3
  */
 
 if (!class_exists('RapidAddon')) {
@@ -1092,7 +1092,7 @@ if (!class_exists('RapidAddon')) {
 
 				?>
 
-                <div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php /* sanitize_key is used as it only allows alphanumeric, underscore, and dash while ensuring the value matches our later checks. */ echo sanitize_key($this->slug); ?>">
+                <div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php echo esc_attr(sanitize_key($this->slug)); ?>">
                     <p><?php echo \wp_kses_post(\__(
 							sprintf(
 								$notice_text,
