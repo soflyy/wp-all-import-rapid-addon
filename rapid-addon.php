@@ -5,7 +5,7 @@
  * @package     WP All Import RapidAddon
  * @copyright   Copyright (c) 2014, Soflyy
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @version 	1.1.3
+ * @version 	1.1.4
  */
 
 if (!class_exists('RapidAddon')) {
@@ -566,7 +566,7 @@ if (!class_exists('RapidAddon')) {
 				}
 			} else if($field_params['type'] == 'title'){
 				?>
-                <h4 class="wpallimport-add-on-options-title"><?php \esc_html_e($field_params['name'], 'wp_all_import_plugin'); ?><?php if ( ! empty($field_params['tooltip'])): ?><a href="#help" class="wpallimport-help" title="<?php echo \wp_kses_post($field_params['tooltip']); ?>" style="position:relative; top: -1px;">?</a><?php endif; ?></h4>
+                <h4 class="wpallimport-add-on-options-title"><?php echo \esc_html($field_params['name']); ?><?php if ( ! empty($field_params['tooltip'])): ?><a href="#help" class="wpallimport-help" title="<?php echo \wp_kses_post($field_params['tooltip']); ?>" style="position:relative; top: -1px;">?</a><?php endif; ?></h4>
 				<?php
 
 			} else if($field_params['type'] == 'plain_text'){
@@ -574,7 +574,7 @@ if (!class_exists('RapidAddon')) {
 					echo \wp_kses_post($field_params['name']);
 				else:
 					?>
-                    <p style="margin: 0 0 12px 0;"><?php \esc_html_e($field_params['name']);?></p>
+                    <p style="margin: 0 0 12px 0;"><?php echo \esc_html($field_params['name']);?></p>
 				<?php
 				endif;
 			}
@@ -864,7 +864,7 @@ if (!class_exists('RapidAddon')) {
 			<div class="wpallimport-collapsed wpallimport-section wpallimport-addon '.\esc_attr($this->slug).' closed">
 				<div class="wpallimport-content-section">
 					<div class="wpallimport-collapsed-header">
-						<h3>'.\esc_html__($name,'pmxi_plugin').'</h3>	
+						<h3>'.\esc_html($name).'</h3>	
 					</div>
 					<div class="wpallimport-collapsed-content" style="padding: 0;">
 						<div class="wpallimport-collapsed-content-inner">
@@ -1093,13 +1093,11 @@ if (!class_exists('RapidAddon')) {
 				?>
 
                 <div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php echo esc_attr(sanitize_key($this->slug)); ?>">
-                    <p><?php echo \wp_kses_post(\__(
+                    <p><?php echo \wp_kses_post(
 							sprintf(
 								$notice_text,
 								'?'.$this->slug.'_ignore=0'
-							),
-							'rapid_addon_'.$this->slug
-						)); ?></p>
+							)); ?></p>
                 </div>
 
 				<?php
