@@ -1093,11 +1093,7 @@ if (!class_exists('RapidAddon')) {
 				?>
 
                 <div class="error notice is-dismissible wpallimport-dismissible" style="margin-top: 10px;" rel="<?php echo esc_attr(sanitize_key($this->slug)); ?>">
-                    <p><?php echo \wp_kses_post(
-							sprintf(
-								$notice_text,
-								'?'.$this->slug.'_ignore=0'
-							)); ?></p>
+                    <p><?php echo \wp_kses_post( $notice_text ); ?></p>
                 </div>
 
 				<?php
