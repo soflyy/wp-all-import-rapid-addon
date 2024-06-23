@@ -59,6 +59,12 @@ if (!class_exists('RapidAddon')) {
 
 		protected $isWizard = true;
 
+	        public $active_post_types;
+	
+	        public $active_themes;
+	
+	        public $active_plugins;
+
 		function __construct($name, $slug) {
 			$this->name = $name;
 			$this->slug = $slug;
