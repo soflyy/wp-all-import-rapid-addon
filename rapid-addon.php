@@ -14,7 +14,7 @@ if (!class_exists('RapidAddon')) {
 
 		public $name;
 		public $slug;
-		public $fields;
+		public $fields = array();
 		public $options = array();
 		public $accordions = array();
 		public $image_sections = array();
